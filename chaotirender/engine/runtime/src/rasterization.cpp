@@ -83,7 +83,7 @@ namespace Chaotirender
 
     void rasterizeTriangle()
     {   
-        int num_faces = vertex_buffer.size() / 3;
+        int num_faces = g_pipeline_global_context.geometry_index_buffer.size() / 3;
 
         for (int f = 0; f < num_faces; f++)
         {   
