@@ -28,7 +28,7 @@ namespace Chaotirender
         std::vector<Vertex> geometry_vertex_buffer;
         std::vector<index_t> geometry_index_buffer;
 
-        std::vector<std::unique_ptr<FragmentBuffer>> fragment_buffers;
+        std::vector<Fragment> fragment_buffer;
 
         TGAColor draw_color;
     };

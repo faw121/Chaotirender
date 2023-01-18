@@ -112,9 +112,6 @@ namespace Chaotirender
             TriangleBoundingBox bounding_box;
             triangleBoundingBox(p0, p1, p2, bounding_box);
 
-            // fragment buffer
-            auto fragment_buffer_ptr = std::make_unique<FragmentBuffer>(bounding_box);
-
             // triangle traversal
             for (int i = bounding_box.xmin; i <= bounding_box.xmax; i++)
             {
@@ -122,9 +119,10 @@ namespace Chaotirender
                 {
                     if (insideTriangle(i + 0.5f, j + 0.5f))
                     {
-                        // interpolate attributes
-                        // TODO: switch by perspective / orthogonal
                         Fragment fragment;
+                        fragment.screen_coord = glm::vec2(i, j);
+
+                        // interpolate attributes
                         float alpha, beta, gamma, s;
                         s = s0 + s1 + s2;
 
@@ -145,11 +143,10 @@ namespace Chaotirender
                         fragment.normal = (alpha_ * v0.normal + beta_ * v1.normal + gamma_ * v2.normal) / w_inverse;
                         fragment.uv = (alpha_ * v0.uv + beta_ * v1.uv + gamma_ * v2.uv) / w_inverse;
 
-                        fragment_buffer_ptr->setFragment(i, j, fragment);
+                        g_pipeline_global_context.fragment_buffer.push_back(fragment);
                     }
                 }
             }
-            g_pipeline_global_context.fragment_buffers.push_back(std::move(fragment_buffer_ptr));
         }
     }
 

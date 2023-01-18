@@ -8,6 +8,14 @@
 
 namespace Chaotirender
 {   
+    struct TriangleBoundingBox
+    {
+        int xmin;
+        int ymin;
+        int xmax;
+        int ymax;
+    };
+
     typedef glm::vec3 EdgeEquation;
 
     extern EdgeEquation e0;
