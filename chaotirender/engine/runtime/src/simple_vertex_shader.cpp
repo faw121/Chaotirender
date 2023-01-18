@@ -4,12 +4,7 @@
 
 namespace Chaotirender
 {   
-    SimpleVertexShader::SimpleVertexShader()
-    {
-        model_matrix      = glm::mat4(1);
-        view_matrix       = glm::mat4(1);
-        projection_matrix = glm::mat4(1);
-    }
+    SimpleVertexShader::SimpleVertexShader(): model_matrix(1), view_matrix(1), projection_matrix(1) {}
 
     void SimpleVertexShader::shadeVertex(Vertex& v)
     {
