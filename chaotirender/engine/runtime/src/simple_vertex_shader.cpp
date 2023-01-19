@@ -6,7 +6,7 @@ namespace Chaotirender
 {   
     SimpleVertexShader::SimpleVertexShader(): model_matrix(1), view_matrix(1), projection_matrix(1) {}
 
-    void SimpleVertexShader::shadeVertex(Vertex& v)
+    void SimpleVertexShader::shadeVertex(Vertex& v) 
     {
         glm::mat4 mv = view_matrix * model_matrix;
         glm::mat4 mvp = projection_matrix * mv;
@@ -16,5 +16,7 @@ namespace Chaotirender
 
         v.position_homo = mvp * v.position_homo;
         v.normal = normal_matrix * v.normal;
+
+        v.world_position = mv * v.position_homo;
     }
 }

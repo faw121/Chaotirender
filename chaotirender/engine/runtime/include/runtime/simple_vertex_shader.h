@@ -11,7 +11,7 @@ namespace Chaotirender
     public:
         SimpleVertexShader();
 
-        void shadeVertex(Vertex& v);
+        void shadeVertex(Vertex& v) override;
 
         glm::mat4 model_matrix;
         glm::mat4 view_matrix;
