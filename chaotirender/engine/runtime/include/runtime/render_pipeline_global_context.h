@@ -17,13 +17,17 @@ namespace Chaotirender
         
         RenderPipelineGlobalContext() = default;
 
+        void set_depth(int i, int j, float depth);
+
+        float get_depth(int i, int j) const;
+
         const int screen_width;
         const int screen_height;
 
         TGAImage color_buffer;
 
         std::vector<Vertex>  vertex_buffer;
-        std::vector<index_t> index_buffer; // 似乎不需要？读的时候就按顺序放了
+        std::vector<index_t> index_buffer;
 
         std::vector<Vertex> geometry_vertex_buffer;
         std::vector<index_t> geometry_index_buffer;
@@ -31,6 +35,9 @@ namespace Chaotirender
         std::vector<Fragment> fragment_buffer;
 
         TGAColor draw_color;
+    
+    private:
+        std::vector<float> depth_buffer;
     };
 
     extern RenderPipelineGlobalContext g_pipeline_global_context;
