@@ -11,6 +11,7 @@ namespace Chaotirender
         float        depth;
         glm::vec3    normal;
         glm::vec2    uv;
+        glm::vec3    world_position;
         glm::vec3    color;
     };
 }
