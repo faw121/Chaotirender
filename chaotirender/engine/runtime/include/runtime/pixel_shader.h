@@ -7,6 +7,6 @@ namespace Chaotirender
     class PixelShader
     {
     public:
-        virtual void shadePixel(Fragment fragment) = 0;
+        virtual void shadePixel(Fragment& fragment) = 0;
     };
 }

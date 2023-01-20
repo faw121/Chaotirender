@@ -1,16 +1,17 @@
-#include <runtime/rasterization.h>
+#include <runtime/rasterizer.h>
+#include <runtime/render_pipeline_global_context.h>
 
 #include <memory>
+
+#include <runtime/debug.h>
 
 #define TOPEDGE(e)  e.x == 0 && e.y < 0
 #define LEFTEDGE(e) e.x > 0
 
 namespace Chaotirender
 {   
-    extern std::vector<Chaotirender::Vertex>  vertex_buffer;
-    extern std::vector<Chaotirender::index_t> index_buffer; 
 
-    void rasterizeLine(float x0_, float y0_, float x1_, float y1_)
+    void Rasterizer::rasterizeLine(float x0_, float y0_, float x1_, float y1_)
     {
         int x0, x1, y0, y1, dx, dy, dx_abs, dy_abs;
         bool swapxy = false;
@@ -73,15 +74,7 @@ namespace Chaotirender
         }
     }
 
-    EdgeEquation e0;
-    EdgeEquation e1;
-    EdgeEquation e2;
-
-    float s0;
-    float s1;
-    float s2;
-
-    void rasterizeTriangle()
+    void Rasterizer::rasterizeTriangle()
     {   
         int num_faces = g_pipeline_global_context.geometry_index_buffer.size() / 3;
 
@@ -106,7 +99,10 @@ namespace Chaotirender
             p1 /= p1.w;
             p2 /= p2.w; 
 
-            triangleSetup(p0, p1, p2);
+            EdgeEquation e0, e1, e2;
+            float s0, s1, s2;
+
+            triangleSetup(p0, p1, p2, e0, e1, e2);
 
             // bounding box of triangle
             TriangleBoundingBox bounding_box;
@@ -117,8 +113,9 @@ namespace Chaotirender
             {
                 for (int j = bounding_box.ymin; j <= bounding_box.ymax; j++)
                 {
-                    if (insideTriangle(i + 0.5f, j + 0.5f))
-                    {
+                    if (insideTriangle(i + 0.5f, j + 0.5f, s0, s1, s2, e0, e1, e2))
+                    {   
+                        // g_pipeline_global_context.color_buffer.set(i, j, g_pipeline_global_context.draw_color);
                         Fragment fragment;
                         fragment.screen_coord = glm::vec2(i, j);
 
@@ -138,7 +135,7 @@ namespace Chaotirender
                         beta_ = beta / w1;
                         gamma_ = gamma / w2;
 
-                        fragment.depth = - 1 / w_inverse; // absolute value
+                        fragment.depth = 1 / w_inverse; // absolute value
 
                         fragment.normal = (alpha_ * v0.normal + beta_ * v1.normal + gamma_ * v2.normal) / w_inverse;
                         fragment.uv = (alpha_ * v0.uv + beta_ * v1.uv + gamma_ * v2.uv) / w_inverse;
@@ -150,14 +147,16 @@ namespace Chaotirender
         }
     }
 
-    void swapi(int& x, int& y)
+    float Rasterizer::evaluateEdgeEquation(float x, float y, EdgeEquation e) { return x * e.x + y * e.y + e.z; }
+
+    void Rasterizer::swapi(int& x, int& y)
     {
         int temp = x;
         x = y;
         y = temp;
     }
 
-    void triangleBoundingBox(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, TriangleBoundingBox& bb)
+    void Rasterizer::triangleBoundingBox(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, TriangleBoundingBox& bb)
     {
         float xmax_, xmin_, ymax_, ymin_;
         xmax_ = xmin_ = p0.x;
@@ -186,7 +185,7 @@ namespace Chaotirender
         bb.ymax = ymax_ > g_pipeline_global_context.screen_height ? g_pipeline_global_context.screen_height : static_cast<int>(ymax_);
     }
 
-    void triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2)
+    void Rasterizer::triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2)
     {
         //edge equation
         e2 = EdgeEquation(p0.y - p1.y, -(p0.x - p1.x), -p0.x * (p0.y - p1.y) + p0.y * (p0.x - p1.x));
@@ -202,21 +201,21 @@ namespace Chaotirender
         }
     }
 
-    bool insideTriangle(float x, float y)
-    {
+    bool Rasterizer::insideTriangle(float x, float y, float& s0, float& s1, float& s2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2)
+    {   
         s0 = evaluateEdgeEquation(x, y, e0);
 
-        if (s0 < 0 || (s0 = 0 && !TOPEDGE(e0) && !LEFTEDGE(e0)))
+        if (s0 < 0 || (s0 == 0 && !TOPEDGE(e0) && !LEFTEDGE(e0)))
             return false;
 
         s1 = evaluateEdgeEquation(x, y, e1);
 
-        if (s1 < 0 || (s1 = 0 && !TOPEDGE(e1) && !LEFTEDGE(e1)))
+        if (s1 < 0 || (s1 == 0 && !TOPEDGE(e1) && !LEFTEDGE(e1)))
             return false;
         
         s2 = evaluateEdgeEquation(x, y, e2);
         
-        if (s2 < 0 || (s2 = 0 && !TOPEDGE(e2) && !LEFTEDGE(e2)))
+        if (s2 < 0 || (s2 == 0 && !TOPEDGE(e2) && !LEFTEDGE(e2)))
             return false;
 
         return true;

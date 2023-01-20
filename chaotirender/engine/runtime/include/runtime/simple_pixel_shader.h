@@ -13,7 +13,7 @@ namespace Chaotirender
     class SimplePixelShader: public PixelShader
     {
     public:
-        void shadePixel(Fragment fragment) override;
+        void shadePixel(Fragment& fragment) override;
 
         Light light;
     };

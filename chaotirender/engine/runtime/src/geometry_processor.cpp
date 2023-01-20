@@ -1,5 +1,7 @@
 #include <runtime/geometry_processor.h>
 
+#include <runtime/render_pipeline_global_context.h>
+
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 
@@ -46,11 +48,11 @@ namespace Chaotirender
             vertex_shader->shadeVertex(v1);
             vertex_shader->shadeVertex(v2);
 
-            // debug
-            std::cout << "after projection:" << std::endl;
-            std::cout << glm::to_string(v0.position_homo) << std::endl;
-            std::cout << glm::to_string(v1.position_homo) << std::endl;
-            std::cout << glm::to_string(v2.position_homo) << std::endl;
+            // // debug
+            // std::cout << "after projection:" << std::endl;
+            // std::cout << glm::to_string(v0.position_homo) << std::endl;
+            // std::cout << glm::to_string(v1.position_homo) << std::endl;
+            // std::cout << glm::to_string(v2.position_homo) << std::endl;
             
             // do clipping
             // TODO: support other primitives
@@ -68,11 +70,13 @@ namespace Chaotirender
 
             // do screen mapping
             // TODO: 不知clipping和screen mapping是串行还是并发比较好
-            std::cout << "after clip:" << std::endl;
+            // debug
+            // std::cout << "after clip:" << std::endl;
             for (int i = 0; i < out_size; i++)
             {   
-                std::cout << glm::to_string(out_vertices[i].position_homo) << std::endl;
+                // std::cout << glm::to_string(out_vertices[i].position_homo) << std::endl;
                 mapScreen(out_vertices[i]);
+                // std::cout << glm::to_string(out_vertices[i].position_homo) << std::endl;
             }
             
             std::copy(
@@ -80,7 +84,8 @@ namespace Chaotirender
                 out_vertices.end(),
                 std::back_inserter(g_pipeline_global_context.geometry_vertex_buffer));
 
-            std::cout << g_pipeline_global_context.geometry_vertex_buffer.size() << std::endl;
+            // debug
+            // std::cout << g_pipeline_global_context.geometry_vertex_buffer.size() << std::endl;
 
             for (int i = 1; i < out_size - 1; i++)
             {
@@ -168,7 +173,7 @@ namespace Chaotirender
                 v.position_homo = p0 + t * p0p1;
 
                 // debug
-                std::cout << glm::to_string(v.position_homo) << std::endl;
+                // std::cout << glm::to_string(v.position_homo) << std::endl;
 
                 v.normal = (1 - t) * v0.normal + t * v1.normal;
                 v.uv = (1 - t) * v0.uv + t * v1.uv;

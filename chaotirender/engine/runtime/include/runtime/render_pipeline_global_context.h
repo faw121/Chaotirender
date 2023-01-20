@@ -3,6 +3,9 @@
 #include <runtime/tgaimage.h>
 #include <runtime/mesh_data.h>
 #include <runtime/fragment.h>
+#include <runtime/pixel_processor.h>
+#include <runtime/geometry_processor.h>
+#include <runtime/rasterizer.h>
 
 #include <glm/mat4x4.hpp>
 
@@ -17,9 +20,22 @@ namespace Chaotirender
         
         RenderPipelineGlobalContext() = default;
 
-        void set_depth(int i, int j, float depth);
+        void runPipeline();
 
-        float get_depth(int i, int j) const;
+        void setVertexShader(VertexShader* vertex_shader_ptr);
+
+        void setPixelShader(PixelShader* pixel_shader_ptr);
+
+        void setDepth(int i, int j, float depth);
+
+        float getDepth(int i, int j) const;
+
+    public:
+        std::unique_ptr<GeometryProcessor> geometry_processor;
+
+        std::unique_ptr<Rasterizer> rasterizer;
+
+        std::unique_ptr<PixelProcessor> pixel_processor;
 
         const int screen_width;
         const int screen_height;
@@ -35,7 +51,7 @@ namespace Chaotirender
         std::vector<Fragment> fragment_buffer;
 
         TGAColor draw_color;
-    
+
     private:
         std::vector<float> depth_buffer;
     };

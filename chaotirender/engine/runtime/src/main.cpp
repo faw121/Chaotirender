@@ -4,8 +4,8 @@
 
 int main(int argc, char** argv) 
 {
-    Chaotirender::testPipeline();
-    // Chaotirender::runPipeline();
+    // Chaotirender::testPipeline();
+    Chaotirender::runPipeline();
 
     return 0;
 }
