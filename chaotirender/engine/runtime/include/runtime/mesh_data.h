@@ -5,12 +5,15 @@
 #include <glm/vec4.hpp>
 
 #include <vector>
+#include <map>
+#include <any>
 
 namespace Chaotirender
 {
     // use vec, easy to distinguish data for pipeline implementation
-    struct Vertex
-    {   
+    class Vertex
+    {  
+    public: 
         union 
         {
             glm::vec3 position;
@@ -22,7 +25,8 @@ namespace Chaotirender
         glm::vec2 uv;
 
         glm::vec3 world_position;
-
+    
+    public:
         Vertex(float px, float py, float pz, float nx, float ny, float nz, float u, float v):
             position(px, py, pz), normal(nx, ny, nz), uv(u, v) {}
 
@@ -33,6 +37,17 @@ namespace Chaotirender
             position_homo(px, py, pz, pw), normal(nx, ny, nz), uv(u, v) {}
         
         Vertex() = default;
+    };
+
+    class PipelineVertex: public Vertex
+    {
+    public:
+        PipelineVertex(Vertex& v): Vertex(v) {}
+
+        PipelineVertex() = default;
+
+    public:
+        std::map<std::string, std::any> varyings;
     };
 
     typedef unsigned int index_t;
