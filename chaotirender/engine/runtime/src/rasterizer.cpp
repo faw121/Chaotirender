@@ -8,6 +8,8 @@
 #define TOPEDGE(e)  e.x == 0 && e.y < 0
 #define LEFTEDGE(e) e.x > 0
 
+#define FLOAT_EQUAL(x, c) c - 0.0001f < x && c + 0.0001f > x 
+
 namespace Chaotirender
 {   
 
@@ -128,17 +130,46 @@ namespace Chaotirender
                         gamma = s2 / s;
 
                         float w_inverse;
-                        w_inverse = alpha / w0 + beta / w1 + gamma / w2;
 
                         float alpha_, beta_, gamma_;
                         alpha_ = alpha / w0;
                         beta_ = beta / w1;
                         gamma_ = gamma / w2;
 
+                        w_inverse = alpha_ + beta_ + gamma_;
+
+                        // debug
+                        // w_inverse = 1;
+
                         fragment.depth = 1 / w_inverse; // absolute value
 
                         fragment.normal = (alpha_ * v0.normal + beta_ * v1.normal + gamma_ * v2.normal) / w_inverse;
+
+                        // debug
+                        // std::cout << "p0:" << glm::to_string(p0) << " p1:" << glm::to_string(p1) << " p2:" << glm::to_string(p2) << std::endl;
+                        // std::cout << "uv0:" << glm::to_string(v0.uv) << " uv1:" << glm::to_string(v1.uv) << " uv2:" << glm::to_string(v2.uv) << std::endl;
+                        // std::cout << "w0:" << w0 << " w1:" << w1 << " w2:" << w2 << std::endl;
+                        // std::cout << "alpha:" << alpha << " beta:" << beta << " gamma:" << gamma <<std::endl;
+                        // std::cout << "alpha_:" << alpha_ << " beta_:" << beta_ << " gamma_:" << gamma_ <<std::endl;
+                        // std::cout << "pixel uv:" << glm::to_string((alpha_ * v0.uv + beta_ * v1.uv + gamma_ * v2.uv) / w_inverse) <<std::endl;
+
                         fragment.uv = (alpha_ * v0.uv + beta_ * v1.uv + gamma_ * v2.uv) / w_inverse;
+
+                        // debug
+                        // float u = fragment.uv.x;
+                        // float v = fragment.uv.y;
+
+                        // if (i > 180 && i < 210 && j > 180 && j < 210)
+                        // {
+                        //     std::cout << "p0:" << glm::to_string(p0) << " p1:" << glm::to_string(p1) << " p2:" << glm::to_string(p2) << std::endl;
+                        //     std::cout << "uv0:" << glm::to_string(v0.uv) << " uv1:" << glm::to_string(v1.uv) << " uv2:" << glm::to_string(v2.uv) << std::endl;
+                        //     std::cout << "w0:" << w0 << " w1:" << w1 << " w2:" << w2 << std::endl;
+                        //     std::cout << "alpha:" << alpha << " beta:" << beta << " gamma:" << gamma <<std::endl;
+                        //     std::cout << "alpha_:" << alpha_ << " beta_:" << beta_ << " gamma_:" << gamma_ <<std::endl;
+                        //     std::cout << "pixel uv:" << glm::to_string((alpha_ * v0.uv + beta_ * v1.uv + gamma_ * v2.uv) / w_inverse) <<std::endl;
+                        // }
+                        // if (u < 0.2f && u > 0.1f && v < 0.2f && v > 0.1f)
+                        //     std::cout << "u, v: " << u << ',' << v << std::endl;
 
                         g_pipeline_global_context.fragment_buffer.push_back(fragment);
                     }
@@ -180,9 +211,9 @@ namespace Chaotirender
             ymin_ = p2.y;   
 
         bb.xmin = xmin_ < 0 ? 0 : static_cast<int>(xmin_);
-        bb.xmax = xmax_ > g_pipeline_global_context.screen_width ? g_pipeline_global_context.screen_width : static_cast<int>(xmax_);
+        bb.xmax = xmax_ > g_pipeline_global_context.screen_width ? g_pipeline_global_context.screen_width - 1: static_cast<int>(xmax_);
         bb.ymin = ymin_ < 0 ? 0 : static_cast<int>(ymin_);
-        bb.ymax = ymax_ > g_pipeline_global_context.screen_height ? g_pipeline_global_context.screen_height : static_cast<int>(ymax_);
+        bb.ymax = ymax_ > g_pipeline_global_context.screen_height ? g_pipeline_global_context.screen_height - 1: static_cast<int>(ymax_);
     }
 
     void Rasterizer::triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2)

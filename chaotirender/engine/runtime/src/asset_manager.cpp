@@ -1,6 +1,8 @@
 #include <runtime/asset_manager.h>
 #include <iostream>
 
+#include <runtime/debug.h>
+
 namespace Chaotirender
 {   
     tinyobj::ObjReader reader;
@@ -66,9 +68,10 @@ namespace Chaotirender
                     tinyobj::real_t tv = -1;
                     if (index.texcoord_index >= 0)
                     {
-                        tu = attributes.texcoords[3 * size_t(index.texcoord_index) + 0];
-                        tv = attributes.texcoords[3 * size_t(index.texcoord_index) + 1];
+                        tu = attributes.texcoords[2 * size_t(index.texcoord_index) + 0];
+                        tv = attributes.texcoords[2 * size_t(index.texcoord_index) + 1];
                     }
+
                     g_pipeline_global_context.vertex_buffer.push_back(Vertex(vx, vy, vz, nx, ny, nz, tu, tv));
                     g_pipeline_global_context.index_buffer.push_back(vertex_index);
                     vertex_index++;

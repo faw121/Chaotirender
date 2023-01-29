@@ -43,16 +43,14 @@ namespace Chaotirender
             v1.position_homo = glm::vec4(v1.position, 1);
             v2.position_homo = glm::vec4(v2.position, 1);
 
+            // debug
+            // std::cout << "p0:" << glm::to_string(v0.position_homo) << " p1:" << glm::to_string(v1.position_homo) << " p2:" << glm::to_string(v2.position_homo) << std::endl;
+            // std::cout << "uv0:" << glm::to_string(v0.uv) << " uv1:" << glm::to_string(v1.uv) << " uv2:" << glm::to_string(v2.uv) << std::endl;
+
             // do vertex shading, transformed to [-1, 1]^3 (homogeneous space)
             vertex_shader->shadeVertex(v0);
             vertex_shader->shadeVertex(v1);
             vertex_shader->shadeVertex(v2);
-
-            // // debug
-            // std::cout << "after projection:" << std::endl;
-            // std::cout << glm::to_string(v0.position_homo) << std::endl;
-            // std::cout << glm::to_string(v1.position_homo) << std::endl;
-            // std::cout << glm::to_string(v2.position_homo) << std::endl;
             
             // do clipping
             // TODO: support other primitives

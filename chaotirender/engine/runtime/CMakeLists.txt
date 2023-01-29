@@ -13,3 +13,4 @@ target_include_directories(engineRuntime PUBLIC include)
 
 target_link_libraries(engineRuntime PUBLIC glm)
 target_link_libraries(engineRuntime PUBLIC tinyobjloader)
+target_link_libraries(engineRuntime PRIVATE stb)

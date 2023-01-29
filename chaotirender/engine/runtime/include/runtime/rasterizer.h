@@ -24,6 +24,11 @@ namespace Chaotirender
 
          void rasterizeTriangle();
 
+        //  debug
+        void triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
+
+        bool insideTriangle(float x, float y, float& s0, float& s1, float& s2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
+
     private:
         // EdgeEquation e0;
         // EdgeEquation e1;
@@ -35,9 +40,9 @@ namespace Chaotirender
 
         float evaluateEdgeEquation(float x, float y, EdgeEquation e);
 
-        void triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
+        // void triangleSetup(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
 
-        bool insideTriangle(float x, float y, float& s0, float& s1, float& s2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
+        // bool insideTriangle(float x, float y, float& s0, float& s1, float& s2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2);
 
         void triangleBoundingBox(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, TriangleBoundingBox& bb);
 

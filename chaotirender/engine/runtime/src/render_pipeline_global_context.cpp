@@ -6,7 +6,7 @@
 
 namespace Chaotirender
 {   
-    RenderPipelineGlobalContext g_pipeline_global_context(800, 800);
+    RenderPipelineGlobalContext g_pipeline_global_context(600, 600);
 
     void RenderPipelineGlobalContext::runPipeline()
     {   
@@ -24,7 +24,14 @@ namespace Chaotirender
 
     void RenderPipelineGlobalContext::setPixelShader(PixelShader* pixel_shader_ptr)
     {
-        pixel_processor->pixel_shader =pixel_shader_ptr;
+        pixel_processor->pixel_shader = pixel_shader_ptr;
+    }
+
+    void RenderPipelineGlobalContext::bindTexture(std::shared_ptr<TextureBase> texture_)
+    {
+        assert(pixel_processor->pixel_shader != nullptr && "pixel shader not set!");
+
+        pixel_processor->pixel_shader->texture = texture_;
     }
 
     RenderPipelineGlobalContext::RenderPipelineGlobalContext(int w, int h):

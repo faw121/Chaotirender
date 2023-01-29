@@ -6,6 +6,7 @@
 #include <runtime/pixel_processor.h>
 #include <runtime/geometry_processor.h>
 #include <runtime/rasterizer.h>
+#include <runtime/texture.h>
 
 #include <glm/mat4x4.hpp>
 
@@ -25,6 +26,8 @@ namespace Chaotirender
         void setVertexShader(VertexShader* vertex_shader_ptr);
 
         void setPixelShader(PixelShader* pixel_shader_ptr);
+
+        void bindTexture(std::shared_ptr<TextureBase> texture_);
 
         void setDepth(int i, int j, float depth);
 

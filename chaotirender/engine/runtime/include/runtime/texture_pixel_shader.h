@@ -5,7 +5,7 @@
 
 namespace Chaotirender
 {   
-    class SimplePixelShader: public PixelShader
+    class TexturePixelShader: public PixelShader
     {
     public:
         virtual void shadePixel(Fragment& fragment) override;
