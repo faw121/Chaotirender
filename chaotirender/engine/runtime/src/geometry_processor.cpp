@@ -43,10 +43,6 @@ namespace Chaotirender
             v1.position_homo = glm::vec4(v1.position, 1);
             v2.position_homo = glm::vec4(v2.position, 1);
 
-            // debug
-            // std::cout << "p0:" << glm::to_string(v0.position_homo) << " p1:" << glm::to_string(v1.position_homo) << " p2:" << glm::to_string(v2.position_homo) << std::endl;
-            // std::cout << "uv0:" << glm::to_string(v0.uv) << " uv1:" << glm::to_string(v1.uv) << " uv2:" << glm::to_string(v2.uv) << std::endl;
-
             // do vertex shading, transformed to [-1, 1]^3 (homogeneous space)
             vertex_shader->shadeVertex(v0);
             vertex_shader->shadeVertex(v1);
@@ -81,9 +77,6 @@ namespace Chaotirender
                 out_vertices.begin(), 
                 out_vertices.end(),
                 std::back_inserter(g_pipeline_global_context.geometry_vertex_buffer));
-
-            // debug
-            // std::cout << g_pipeline_global_context.geometry_vertex_buffer.size() << std::endl;
 
             for (int i = 1; i < out_size - 1; i++)
             {
@@ -169,10 +162,6 @@ namespace Chaotirender
                 t = (-p0.w - p0.z) / (p0p1.z + p0p1.w);
                 Vertex v;
                 v.position_homo = p0 + t * p0p1;
-
-                // debug
-                // std::cout << glm::to_string(v.position_homo) << std::endl;
-
                 v.normal = (1 - t) * v0.normal + t * v1.normal;
                 v.uv = (1 - t) * v0.uv + t * v1.uv;
                 out_vertices.push_back(v);
