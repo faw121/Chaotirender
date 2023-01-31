@@ -22,6 +22,8 @@ namespace Chaotirender
             
         else if (sample_type == SampleType::BILINEAR)
             return sampleBilinear(u, v);
+        
+        return sampleNearest(u, v);
     }
 
     glm::vec4 Texture::sampleNearest(float u, float v)
