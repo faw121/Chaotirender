@@ -6,12 +6,20 @@
 #include <memory>
 
 namespace Chaotirender
-{
+{   
+    enum class SampleType: uint8_t
+    {
+        NEAREST = 0,
+        BILINEAR
+    };
+
     class TextureBase
     {
     public:
-        virtual ~TextureBase() {}
+        SampleType sample_type = SampleType::NEAREST;
+
         virtual glm::vec4 sample(float u, float v) = 0;
+        virtual ~TextureBase() {}
     };
 
     class Texture: public TextureBase
@@ -22,6 +30,10 @@ namespace Chaotirender
         virtual glm::vec4 sample(float u, float v) override;
 
         glm::vec4 sampleNearest(float u, float v);
+
+        glm::vec4 sampleBilinear(float u, float v);
+
+        glm::vec4 getTexel(int i, int j);
 
     public:
         uint32_t width {0};

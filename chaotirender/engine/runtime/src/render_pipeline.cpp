@@ -37,7 +37,7 @@ namespace Chaotirender
 
         model_mat = glm::rotate(model_mat, 3 * glm::pi<float>() / 4, glm::vec3(0, 1, 0));
         // model_mat = glm::rotate(model_mat, glm::pi<float>() / 4, glm::vec3(1, 0, 0));
-        view_mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        view_mat = glm::lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         projection_mat = glm::perspective(glm::half_pi<float>() / 2, 1.f, 0.1f, 100.f); // glm::perspective(glm::half_pi<float>(), 1.f, 0.1f, 10.f);
         // projection_mat = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
 
@@ -56,6 +56,7 @@ namespace Chaotirender
         // g_pipeline_global_context.setPixelShader(&simple_pixel_shader);
         g_pipeline_global_context.setPixelShader(&texture_pixel_shader);
 
+        // texture->sample_type = SampleType::BILINEAR;
         g_pipeline_global_context.bindTexture(texture);
 
         g_pipeline_global_context.runPipeline();
