@@ -4,3 +4,4 @@ set(ENGINE_ASSET_DIR "/asset")
 
 add_subdirectory(3rdparty)
 add_subdirectory(engine/runtime)
+add_subdirectory(engine/editor)
