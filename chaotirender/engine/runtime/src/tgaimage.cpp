@@ -237,3 +237,8 @@ int TGAImage::height() const {
     return h;
 }
 
+const uint8_t* TGAImage::getData() const
+{
+    return data.data();
+}
+

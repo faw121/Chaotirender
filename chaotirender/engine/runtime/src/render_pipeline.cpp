@@ -14,9 +14,11 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
+#include <chrono>
 
 namespace Chaotirender
 {   
+
     void runPipeline()
     {
         loadAsset("asset/spot/spot_triangulated_good.obj");
@@ -59,7 +61,15 @@ namespace Chaotirender
         // texture->sample_type = SampleType::BILINEAR;
         g_pipeline_global_context.bindTexture(texture);
 
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         g_pipeline_global_context.runPipeline();
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double, std::milli> time = t2 - t1;
+
+        std::cout << "time spent: " << time.count() << "ms" << std::endl;
 
         g_pipeline_global_context.color_buffer.write_tga_file("spot.tga");
     }

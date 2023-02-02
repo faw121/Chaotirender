@@ -6,7 +6,7 @@
 
 namespace Chaotirender
 {   
-    RenderPipelineGlobalContext g_pipeline_global_context(600, 600);
+    RenderPipelineGlobalContext g_pipeline_global_context(800, 800);
 
     void RenderPipelineGlobalContext::runPipeline()
     {   

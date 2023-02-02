@@ -21,3 +21,7 @@ endif()
 if(NOT TARGET stb)
     include(stb.cmake)
 endif()
+
+if(NOT TARGET glad)
+    include(glad.cmake)
+endif()

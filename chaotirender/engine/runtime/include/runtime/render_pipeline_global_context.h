@@ -14,6 +14,11 @@
 
 namespace Chaotirender
 {
+    // TODO: 
+    // 1. option flag: eraly-z, back face culling
+    // 2. shader define variables: atrribute, varying, uniform
+    // 3. does renderPipeline need to be global?
+    // 4. tile based: performance and mipmap
     class RenderPipelineGlobalContext
     {
     public:

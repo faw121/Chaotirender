@@ -11,6 +11,7 @@ add_custom_target(copy_asset
 
 target_include_directories(${TARGET_NAME} PUBLIC include)
 
+target_link_libraries(${TARGET_NAME} PUBLIC glad)
 target_link_libraries(${TARGET_NAME} PUBLIC glfw)
 target_link_libraries(${TARGET_NAME} PUBLIC imgui)
 target_link_libraries(${TARGET_NAME} PUBLIC engineRuntime)
