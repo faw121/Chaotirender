@@ -203,23 +203,47 @@ namespace Chaotirender
             e1 = - e1;
             e0 = - e0;
         }
+        
+    }
+
+    void Rasterizer::triangleSetupTile(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2, TileStep& ts0, TileStep& ts1, TileStep& ts2)
+    {
+        //edge equation
+        e2 = EdgeEquation(p0.y - p1.y, -(p0.x - p1.x), -p0.x * (p0.y - p1.y) + p0.y * (p0.x - p1.x));
+        e0 = EdgeEquation(p1.y - p2.y, -(p1.x - p2.x), -p1.x * (p1.y - p2.y) + p1.y * (p1.x - p2.x));
+        e1 = EdgeEquation(p2.y - p0.y, -(p2.x - p0.x), -p2.x * (p2.y - p0.y) + p2.y * (p2.x - p0.x));
+
+        // test inside, plug in p2 to e2
+        if (evaluateEdgeEquation(p2.x, p2.y, e2) < 0)
+        {
+            e2 = - e2;
+            e1 = - e1;
+            e0 = - e0;
+        }
+        
+        ts0.x = e0.x > 0 ? 1 : 0;
+        ts0.y = e0.y > 0 ? 1 : 0;
+        ts1.x = e1.x > 0 ? 1 : 0;
+        ts1.y = e1.y > 0 ? 1 : 0;
+        ts2.x = e2.x > 0 ? 1 : 0;
+        ts2.y = e2.y > 0 ? 1 : 0;
     }
 
     bool Rasterizer::insideTriangle(float x, float y, float& s0, float& s1, float& s2, EdgeEquation& e0, EdgeEquation& e1, EdgeEquation& e2)
     {   
         s0 = evaluateEdgeEquation(x, y, e0);
 
-        if (s0 < 0 || (s0 == 0 && !TOPEDGE(e0) && !LEFTEDGE(e0)))
+        if (s0 < 0 || (s0 == 0 && !(TOPEDGE(e0)) && !(LEFTEDGE(e0))))
             return false;
 
         s1 = evaluateEdgeEquation(x, y, e1);
 
-        if (s1 < 0 || (s1 == 0 && !TOPEDGE(e1) && !LEFTEDGE(e1)))
+        if (s1 < 0 || (s1 == 0 && !(TOPEDGE(e1)) && !(LEFTEDGE(e1))))
             return false;
         
         s2 = evaluateEdgeEquation(x, y, e2);
         
-        if (s2 < 0 || (s2 == 0 && !TOPEDGE(e2) && !LEFTEDGE(e2)))
+        if (s2 < 0 || (s2 == 0 && !(TOPEDGE(e2)) && !(LEFTEDGE(e2))))
             return false;
 
         return true;

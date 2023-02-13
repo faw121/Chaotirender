@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <any>
+#include <string>
 
 namespace Chaotirender
 {
@@ -56,5 +57,20 @@ namespace Chaotirender
     {
         std::vector<Vertex> vertex_buffer;
         std::vector<int>    index_buffer;
+    };
+
+    struct Triangle
+    {
+        Vertex m_v0;
+        Vertex m_v1;
+        Vertex m_v2;
+
+        Triangle(Vertex& v0, Vertex& v1, Vertex& v2): m_v0(v0), m_v1(v1), m_v2(v2) {}
+        Triangle() = default;
+    };
+
+    struct TriangleGroup
+    {
+        std::vector<Triangle> triangles;
     };
 }

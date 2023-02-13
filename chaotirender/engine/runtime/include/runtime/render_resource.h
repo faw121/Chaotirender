@@ -4,6 +4,8 @@
 
 #include <memory>
 
+#include <string>
+
 namespace Chaotirender
 {
     class RenderResource

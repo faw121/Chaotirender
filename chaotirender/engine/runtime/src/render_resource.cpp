@@ -9,22 +9,18 @@ namespace Chaotirender
 {
     std::shared_ptr<Texture> RenderResource::loadTexture(std::string file)
     {
-        std::shared_ptr<Texture> texture = std::make_shared<Texture>();
-
         int w, h, n;
-        texture->texels = static_cast<uint8_t*>(stbi_load(file.c_str(), &w, &h, &n, 4));
+        auto texels = static_cast<uint8_t*>(stbi_load(file.c_str(), &w, &h, &n, 4));
 
-        if (!texture->texels)
+        if (!texels)
             return nullptr;
+
+        auto texture = std::make_shared<Texture>(w, h, 4, texels);
+
+        texels = nullptr;
 
         // debug
         std::cout << "w:" << w << " h:" << h << " n:" << n << std::endl;
-
-        texture->width = w;
-        texture->height = h;
-        texture->channel = 4;
-        texture->depth = 1;
-        texture->mip_level = 1;
 
         return texture;
     }

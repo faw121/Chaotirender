@@ -23,8 +23,6 @@ namespace Chaotirender
     {
     public:
         RenderPipelineGlobalContext(int w, int h);
-        
-        RenderPipelineGlobalContext() = default;
 
         void runPipeline();
 

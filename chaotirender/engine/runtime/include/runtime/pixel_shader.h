@@ -4,6 +4,8 @@
 #include <runtime/texture.h>
 
 #include <memory>
+#include <map>
+#include <string>
 
 namespace Chaotirender
 {
@@ -13,5 +15,8 @@ namespace Chaotirender
         virtual void shadePixel(Fragment& fragment) = 0;
 
         std::shared_ptr<TextureBase> texture {nullptr};
+
+        // multiple texture binding
+        std::map<std::string, TextureBase*> texture_list;
     };
 }

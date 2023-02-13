@@ -15,13 +15,13 @@ namespace Chaotirender
 
         void initialize(int w, int h);
 
-        VertexShader* vertex_shader;
-
-    private:
         void clippTriangle(Vertex& v0, Vertex& v1, Vertex& v2, std::vector<Vertex>& out_vertices);
 
         void mapScreen(Vertex& v);
 
+        VertexShader* vertex_shader;
+
+    private:
         glm::mat4 screen_mapping_matrix;
     };
 }

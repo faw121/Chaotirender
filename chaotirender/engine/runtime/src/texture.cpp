@@ -6,9 +6,11 @@
 
 namespace Chaotirender
 {   
+    Texture::Texture(uint32_t w, uint32_t h, uint32_t channel, uint8_t* texels): m_width(w), m_height(h), m_channel(channel), m_texels(texels) {}
+    
     glm::vec4 Texture::sample(float u, float v)
     {   
-        assert(texels != nullptr && "no texture loaded!");
+        assert(m_texels != nullptr && "no texture loaded!");
 
         // simply handle uv out of range
         u = u < 0 ? 0 : u;
@@ -17,10 +19,10 @@ namespace Chaotirender
         u = u > 1 ? 1 : u;
         v = v > 1 ? 1 : v;
         
-        if (sample_type == SampleType::NEAREST)
+        if (m_sample_type == SampleType::NEAREST)
             return sampleNearest(u, v);
             
-        else if (sample_type == SampleType::BILINEAR)
+        else if (m_sample_type == SampleType::BILINEAR)
             return sampleBilinear(u, v);
         
         return sampleNearest(u, v);
@@ -28,8 +30,8 @@ namespace Chaotirender
 
     glm::vec4 Texture::sampleNearest(float u, float v)
     {
-        int x = static_cast<int>(u * (width - 1));
-        int y = static_cast<int>((1 - v) * (height - 1));
+        int x = static_cast<int>(u * (m_width - 1));
+        int y = static_cast<int>((1 - v) * (m_height - 1));
 
         return getTexel(x, y);
     }
@@ -37,8 +39,8 @@ namespace Chaotirender
     glm::vec4 Texture::sampleBilinear(float u, float v)
     {
         // 4 nearest pixels
-        float x = u * (width - 1);
-        float y = (1 - v) * (height - 1);
+        float x = u * (m_width - 1);
+        float y = (1 - v) * (m_height - 1);
 
         int i = static_cast<int>(x);
         int j = static_cast<int>(y);
@@ -64,10 +66,10 @@ namespace Chaotirender
         int y_near = j + sy;
 
         x_near = x_near < 0 ? 0 :x_near;
-        x_near = x_near > width - 1 ? width - 1 : x_near;
+        x_near = x_near > m_width - 1 ? m_width - 1 : x_near;
 
         y_near = y_near < 0 ? 0 :y_near;
-        y_near = y_near > height - 1 ? height - 1 : y_near;
+        y_near = y_near > m_height - 1 ? m_height - 1 : y_near;
 
         glm::vec4 c1 = getTexel(i, j);
         glm::vec4 c2 = getTexel(x_near, j);
@@ -85,12 +87,12 @@ namespace Chaotirender
 
     glm::vec4 Texture::getTexel(int i, int j)
     {
-        int index = (j * width + i) * 4;
+        int index = (j * m_width + i) * 4;
 
-        uint8_t  r = texels[index];
-        uint8_t  g = texels[index + 1];
-        uint8_t  b = texels[index + 2];
-        uint8_t  a = texels[index + 3];
+        uint8_t  r = m_texels[index];
+        uint8_t  g = m_texels[index + 1];
+        uint8_t  b = m_texels[index + 2];
+        uint8_t  a = m_texels[index + 3];
 
         return glm::vec4(r, g, b, a);
     }
