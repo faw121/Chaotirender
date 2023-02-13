@@ -21,5 +21,10 @@ set(CHAOTIRENDER_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_INSTALL_PREFIX "${CHAOTIRENDER_ROOT_DIR}/bin")
 set(BINARY_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/")
 
+# for clang
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 # 添加子项目，调用子项目中的CMakeList.txt
 add_subdirectory(chaotirender)

@@ -5,9 +5,23 @@ file(GLOB_RECURSE srcs CONFIGURE_DEPENDS src/*.cpp)
 add_executable(${TARGET_NAME} ${srcs})
 
 add_custom_target(remove_asset
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset)
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/asset VERBATIM)
 add_custom_target(copy_asset
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset DEPENDS remove_asset)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/asset DEPENDS remove_asset VERBATIM)
+
+add_dependencies(${TARGET_NAME} copy_asset)
+
+# if(${CMAKE_BUILD_TYPE} MATCHES Release)
+#     message(STATUS ${CMAKE_BUILD_TYPE})
+#     message(STATUS $<TARGET_FILE_DIR:target>)
+# endif()
+
+
+
+# add_custom_target(remove_asset
+#     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset)
+# add_custom_target(copy_asset
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset DEPENDS remove_asset)
 
 target_include_directories(${TARGET_NAME} PUBLIC include)
 
