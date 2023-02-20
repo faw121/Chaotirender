@@ -27,6 +27,12 @@ namespace Chaotirender
         void resizeAndClear(int w, int h);
         void resizeAndClear(int w, int h, const Color& clear_color);
 
+        int getWidth() { return m_w; }
+        int getHeight() { return m_h; }
+
+        const Color*  getColorBuffer() const;
+        const float* getDepthBuffer() const;
+
     public:
         int m_w;
         int m_h;

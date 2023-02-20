@@ -6,7 +6,16 @@
 #include <runtime/debug.h>
 
 namespace Chaotirender
-{
+{   
+    uint8_t* RenderResource::loadRawTexture(std::string file, int& w, int&h, int& n)
+    {
+        auto texels = static_cast<uint8_t*>(stbi_load(file.c_str(), &w, &h, &n, 4));
+        n = 4;
+        // debug
+        std::cout << "w:" << w << " h:" << h << " n:" << n << std::endl;
+        return texels;
+    }
+
     std::shared_ptr<Texture> RenderResource::loadTexture(std::string file)
     {
         int w, h, n;

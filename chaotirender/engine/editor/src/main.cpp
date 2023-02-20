@@ -12,10 +12,9 @@ int main(int argc, char** argv)
     // 3. does renderPipeline need to be global?
     // 4. Texture class: w, h, memory, get(u, v)
     // Chaotirender::testPipeline();
-    Chaotirender::runPipelineParallel();
+    // Chaotirender::runPipelineParallel();
     // Chaotirender::runPipeline();
-
-    // Chaotirender::testInterpolation();
+    Chaotirender::test();
 
     return 0;
 }

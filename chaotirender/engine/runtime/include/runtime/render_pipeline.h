@@ -7,6 +7,8 @@
 #include <runtime/vertex_shader.h>
 #include <runtime/pixel_shader.h>
 
+#include <glm/mat4x4.hpp>
+
 #include <vector>
 #include <memory>
 
@@ -18,13 +20,25 @@ namespace Chaotirender
         triangle
     };
 
-    class RenderConfig
+    class RasterizeConfig
     {
     public:
         PrimitiveType primitive {PrimitiveType::triangle};
-        bool early_z {false};
+        Color line_color;
         bool back_face_culling {true};
-        SampleType sample_type {SampleType::NEAREST};
+    };
+    
+    class ShadingConfig
+    {
+    public:
+        bool early_z {false};
+    };
+
+    class RenderConfig
+    {
+    public:
+        RasterizeConfig rasterize_config;
+        ShadingConfig shading_config;
     };
 
     using VertexBuffer = std::vector<Vertex>;
@@ -36,6 +50,8 @@ namespace Chaotirender
     class RenderPipeline
     {
     public:
+        friend class Rasterize;
+
         RenderPipeline(int w, int h);
 
         buffer_id addVertexBuffer(const std::vector<Vertex>& data);
@@ -50,8 +66,8 @@ namespace Chaotirender
         void bindVertexBuffer(buffer_id id);
         void bindIndexBuffer(buffer_id id);
 
-        void bindVertexShaderTexture(buffer_id id, std::string name);
-        void bindPixelShaderTexture(buffer_id id, std::string name);
+        void bindVertexShaderTexture(buffer_id id, std::string name, SampleType sample_type=SampleType::NEAREST);
+        void bindPixelShaderTexture(buffer_id id, std::string name, SampleType sample_type=SampleType::NEAREST);
 
         void removeVertexBuffer(buffer_id id);
         void removeIndexBuffer(buffer_id id);
@@ -71,6 +87,19 @@ namespace Chaotirender
 
         FrameBuffer frame_buffer;
 
+        // for test
+        VertexBuffer* m_vertex_buffer {nullptr};
+        IndexBuffer*  m_index_buffer {nullptr};
+
+        std::shared_ptr<VertexShader> m_vertex_shader;
+        std::shared_ptr<PixelShader>  m_pixel_shader;
+
+        int m_w;
+        int m_h;
+
+        // shouldn't be here
+        glm::mat4 screen_mapping_matrix;
+
     private:
         void drawMesh();
         void drawWireframe();
@@ -80,14 +109,16 @@ namespace Chaotirender
         IndexBufferList   m_index_buffer_list;
         TextureBufferList m_texture_buffer_list;
 
-        VertexBuffer* m_vertex_buffer {nullptr};
-        IndexBuffer*  m_index_buffer {nullptr};
+        // VertexBuffer* m_vertex_buffer {nullptr};
+        // IndexBuffer*  m_index_buffer {nullptr};
 
-        std::shared_ptr<VertexShader> m_vertex_shader;
-        std::shared_ptr<PixelShader>  m_pixel_shader;
+        // std::shared_ptr<VertexShader> m_vertex_shader;
+        // std::shared_ptr<PixelShader>  m_pixel_shader;
     };
     
     void runPipeline();
 
     void runPipelineParallel();
+
+    extern RenderPipeline g_render_pipeline;
 }

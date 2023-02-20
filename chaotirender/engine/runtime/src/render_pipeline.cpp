@@ -22,7 +22,17 @@
 
 namespace Chaotirender
 {   
-    RenderPipeline::RenderPipeline(int w, int h): frame_buffer(w, h) {}
+    RenderPipeline g_render_pipeline(800, 800);
+
+    RenderPipeline::RenderPipeline(int w, int h): frame_buffer(w, h), m_w(w), m_h(h)
+    {
+        screen_mapping_matrix[0][0] = w / 2;
+        screen_mapping_matrix[3][0] = w / 2;
+        screen_mapping_matrix[1][1] = h / 2;
+        screen_mapping_matrix[3][1] = h / 2;
+        screen_mapping_matrix[2][2] = 1;
+        screen_mapping_matrix[3][3] = 1;
+    }
 
     buffer_id RenderPipeline::addVertexBuffer(const std::vector<Vertex>& data) { return m_vertex_buffer_list.add(data); }
     buffer_id RenderPipeline::addVertexBuffer(std::unique_ptr<std::vector<Vertex>>&& data) {  return m_vertex_buffer_list.add(std::move(data)); }
@@ -73,9 +83,19 @@ namespace Chaotirender
 
     void RenderPipeline::setPixelShader(std::shared_ptr<PixelShader> shader) { m_pixel_shader = shader; }
 
-    void RenderPipeline::bindVertexShaderTexture(buffer_id id, std::string name) { m_vertex_shader->texture_list[name] = m_texture_buffer_list.get(id); }
+    void RenderPipeline::bindVertexShaderTexture(buffer_id id, std::string name, SampleType sample_type) 
+    { 
+        auto texture = m_texture_buffer_list.get(id);
+        texture->m_sample_type = sample_type; 
+        m_vertex_shader->texture_list[name] = texture;
+    }
 
-    void RenderPipeline::bindPixelShaderTexture(buffer_id id, std::string name) { m_pixel_shader->texture_list[name] = m_texture_buffer_list.get(id); }
+    void RenderPipeline::bindPixelShaderTexture(buffer_id id, std::string name, SampleType sample_type)
+    {   
+        auto texture = m_texture_buffer_list.get(id);
+        texture->m_sample_type = sample_type; 
+        m_pixel_shader->texture_list[name] = texture; 
+    }
 
     void RenderPipeline::removeTexture(buffer_id id)
     {
@@ -100,7 +120,7 @@ namespace Chaotirender
             pair.second = nullptr;
         m_texture_buffer_list.clear();
     }
-    
+
     void runPipelineParallel()
     {
         loadAsset("asset/spot/spot_triangulated_good.obj");

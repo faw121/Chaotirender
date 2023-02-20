@@ -9,7 +9,7 @@ namespace Chaotirender
     RenderPipelineGlobalContext g_pipeline_global_context(800, 800);
 
     void RenderPipelineGlobalContext::runPipeline()
-    {   
+    {
         geometry_processor->processGeometry();
 
         rasterizer->rasterizeTriangle();

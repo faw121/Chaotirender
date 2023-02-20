@@ -12,6 +12,8 @@ namespace Chaotirender
     class PixelShader
     {
     public:
+        virtual ~PixelShader() {};
+
         virtual void shadePixel(Fragment& fragment) = 0;
 
         std::shared_ptr<TextureBase> texture {nullptr};

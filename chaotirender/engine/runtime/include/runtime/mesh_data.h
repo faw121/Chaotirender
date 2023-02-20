@@ -65,7 +65,7 @@ namespace Chaotirender
         Vertex m_v1;
         Vertex m_v2;
 
-        Triangle(Vertex& v0, Vertex& v1, Vertex& v2): m_v0(v0), m_v1(v1), m_v2(v2) {}
+        Triangle(const Vertex& v0, const Vertex& v1, const Vertex& v2): m_v0(v0), m_v1(v1), m_v2(v2) {}
         Triangle() = default;
     };
 

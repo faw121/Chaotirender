@@ -8,6 +8,8 @@ namespace Chaotirender
     class VertexShader
     {
     public:
+        virtual ~VertexShader() {};
+
         virtual void shadeVertex(Vertex& v) = 0;
 
         std::map<std::string, TextureBase*> texture_list;

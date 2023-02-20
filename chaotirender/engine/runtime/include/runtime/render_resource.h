@@ -12,5 +12,6 @@ namespace Chaotirender
     {
     public:
         std::shared_ptr<Texture> loadTexture(std::string file);
+        uint8_t* loadRawTexture(std::string file, int& w, int&h, int& n);
     };
 }

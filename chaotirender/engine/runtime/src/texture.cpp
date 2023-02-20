@@ -89,6 +89,8 @@ namespace Chaotirender
     {
         int index = (j * m_width + i) * 4;
 
+        int max = m_width * m_height * 4;
+
         uint8_t  r = m_texels[index];
         uint8_t  g = m_texels[index + 1];
         uint8_t  b = m_texels[index + 2];

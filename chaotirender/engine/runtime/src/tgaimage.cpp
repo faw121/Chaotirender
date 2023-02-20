@@ -4,7 +4,10 @@
 
 TGAImage::TGAImage(const int w, const int h, const int bpp) : w(w), h(h), bpp(bpp), data(w*h*bpp, 0) {}
 
-TGAImage::TGAImage(const int w, const int h, const int bpp, std::vector<std::uint8_t>& src): w(w), h(h), bpp(bpp), data(src) {}
+TGAImage::TGAImage(const int w, const int h, const int bpp, const uint8_t* src): w(w), h(h), bpp(bpp), data() 
+{
+    data.assign(src, src + w * h * bpp);
+}
 
 bool TGAImage::read_tga_file(const std::string filename) {
     std::ifstream in;

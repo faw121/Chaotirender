@@ -42,4 +42,7 @@ namespace Chaotirender
 
     void FrameBuffer::setDepth(int i, int j, float value) { m_depth_buffer.set(i, j, value); }
     void FrameBuffer::setColor(int i, int j, const Color& color) { m_color_buffer.set(i, j, color); }
+
+    const Color* FrameBuffer::getColorBuffer() const { return m_color_buffer.data(); }
+    const float* FrameBuffer::getDepthBuffer() const { return m_depth_buffer.data(); }
 }
