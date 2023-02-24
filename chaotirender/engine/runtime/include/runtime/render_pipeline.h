@@ -8,6 +8,7 @@
 #include <runtime/pixel_shader.h>
 
 #include <glm/mat4x4.hpp>
+#include <tbb/tbb.h>
 
 #include <vector>
 #include <memory>
@@ -37,6 +38,7 @@ namespace Chaotirender
     class RenderConfig
     {
     public:
+        bool enable_parallel {true};
         RasterizeConfig rasterize_config;
         ShadingConfig shading_config;
     };
@@ -51,6 +53,7 @@ namespace Chaotirender
     {
     public:
         friend class Rasterize;
+        friend class ProcessGeometry;
 
         RenderPipeline(int w, int h);
 
@@ -87,7 +90,17 @@ namespace Chaotirender
 
         FrameBuffer frame_buffer;
 
-        // for test
+    private:
+        void drawTriangleSerial();
+        void drawWireframeSerial();
+        void drawTriangleParallel();
+        void drawWireframeParallel();
+
+    private:
+        VertexBufferList  m_vertex_buffer_list;
+        IndexBufferList   m_index_buffer_list;
+        TextureBufferList m_texture_buffer_list;
+
         VertexBuffer* m_vertex_buffer {nullptr};
         IndexBuffer*  m_index_buffer {nullptr};
 
@@ -96,29 +109,8 @@ namespace Chaotirender
 
         int m_w;
         int m_h;
-
-        // shouldn't be here
-        glm::mat4 screen_mapping_matrix;
-
-    private:
-        void drawMesh();
-        void drawWireframe();
-
-    private:
-        VertexBufferList  m_vertex_buffer_list;
-        IndexBufferList   m_index_buffer_list;
-        TextureBufferList m_texture_buffer_list;
-
-        // VertexBuffer* m_vertex_buffer {nullptr};
-        // IndexBuffer*  m_index_buffer {nullptr};
-
-        // std::shared_ptr<VertexShader> m_vertex_shader;
-        // std::shared_ptr<PixelShader>  m_pixel_shader;
+        glm::mat4 m_screen_mapping_matrix;
     };
-    
-    void runPipeline();
-
-    void runPipelineParallel();
 
     extern RenderPipeline g_render_pipeline;
 }

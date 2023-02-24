@@ -1,7 +1,5 @@
 #include <runtime/render_pipeline.h>
 
-#include <runtime/render_pipeline_global_context.h>
-
 #include <runtime/asset_manager.h>
 #include <runtime/render_resource.h>
 
@@ -9,7 +7,8 @@
 #include <runtime/simple_pixel_shader.h>
 #include <runtime/texture_pixel_shader.h>
 
-#include <glm/gtc/matrix_transform.hpp>
+#include <runtime/process_geometry.h>
+#include <runtime/rasterize.h>
 
 #include <glm/gtx/string_cast.hpp>
 
@@ -18,22 +17,178 @@
 
 #include <runtime/tick_tock.h>
 
-#include <runtime/parallel.h>
-
 namespace Chaotirender
 {   
     RenderPipeline g_render_pipeline(800, 800);
 
     RenderPipeline::RenderPipeline(int w, int h): frame_buffer(w, h), m_w(w), m_h(h)
     {
-        screen_mapping_matrix[0][0] = w / 2;
-        screen_mapping_matrix[3][0] = w / 2;
-        screen_mapping_matrix[1][1] = h / 2;
-        screen_mapping_matrix[3][1] = h / 2;
-        screen_mapping_matrix[2][2] = 1;
-        screen_mapping_matrix[3][3] = 1;
+        m_screen_mapping_matrix[0][0] = w / 2;
+        m_screen_mapping_matrix[3][0] = w / 2;
+        m_screen_mapping_matrix[1][1] = h / 2;
+        m_screen_mapping_matrix[3][1] = h / 2;
+        m_screen_mapping_matrix[2][2] = 1;
+        m_screen_mapping_matrix[3][3] = 1;
     }
 
+    void RenderPipeline::draw()
+    {   
+        if (render_config.rasterize_config.primitive == PrimitiveType::triangle)
+        {
+            if (render_config.enable_parallel)
+                drawTriangleParallel();
+            else
+                drawTriangleSerial();
+        }
+        else
+        {
+            if (render_config.enable_parallel)
+                drawWireframeParallel();
+            else
+                drawWireframeSerial();
+        }     
+    }
+
+    void RenderPipeline::drawTriangleParallel()
+    {   
+        // assemble triangle
+        std::vector<Triangle> triangle_list;
+        VertexBuffer& vertex_buffer = *m_vertex_buffer;
+
+        int num_faces = m_index_buffer->size() / 3;
+
+        for (int f = 0; f < num_faces; f++)
+        {
+            int index_base = 3 * f;
+            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+
+            t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
+            t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
+            t.m_v2.position_homo = glm::vec4(t.m_v2.position, 1);
+
+            triangle_list.push_back(t);
+        }
+
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, triangle_list.size()),
+        [&](tbb::blocked_range<size_t> r) -> void
+        {   
+            for(size_t i = r.begin(); i < r.end(); i++)
+            {
+                auto t = triangle_list[i];
+                ProcessGeometry process_geometry;
+
+                // process geometry
+                TriangleGroup triangle_group;
+                process_geometry(t, triangle_group);
+
+                // rasterize and draw
+                for (auto& triangle: triangle_group.triangles)
+                {   
+                    Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
+                    rasterize(triangle);
+                }
+            }
+        });
+    }
+
+    void RenderPipeline::drawTriangleSerial()
+    {
+        VertexBuffer& vertex_buffer = *(m_vertex_buffer);
+
+        int num_faces = m_index_buffer->size() / 3;
+
+        for (int f = 0; f < num_faces; f++)
+        {
+            int index_base = 3 * f;
+            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+
+            t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
+            t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
+            t.m_v2.position_homo = glm::vec4(t.m_v2.position, 1);
+
+            TriangleGroup triangle_group;
+            ProcessGeometry process_geometry;
+            process_geometry(t, triangle_group);
+
+            // rasterize and draw
+            for (auto& triangle: triangle_group.triangles)
+            {   
+                Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
+                rasterize(triangle);
+            }
+        }
+    }
+
+    void RenderPipeline::drawWireframeSerial()
+    {
+        VertexBuffer& vertex_buffer = *(m_vertex_buffer);
+
+        int num_faces = m_index_buffer->size() / 3;
+
+        for (int f = 0; f < num_faces; f++)
+        {
+            int index_base = 3 * f;
+            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+
+            t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
+            t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
+            t.m_v2.position_homo = glm::vec4(t.m_v2.position, 1);
+
+            TriangleGroup triangle_group;
+            ProcessGeometry process_geometry;
+            process_geometry(t, triangle_group);
+
+            // rasterize and draw
+            for (auto& triangle: triangle_group.triangles)
+            {   
+                Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
+                rasterize(triangle, render_config.rasterize_config.line_color);
+            }
+        }
+    }
+
+    void RenderPipeline::drawWireframeParallel()
+    {   
+        // assemble triangle
+        std::vector<Triangle> triangle_list;
+        VertexBuffer& vertex_buffer = *m_vertex_buffer;
+
+        int num_faces = m_index_buffer->size() / 3;
+
+        for (int f = 0; f < num_faces; f++)
+        {
+            int index_base = 3 * f;
+            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+
+            t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
+            t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
+            t.m_v2.position_homo = glm::vec4(t.m_v2.position, 1);
+
+            triangle_list.push_back(t);
+        }
+
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, triangle_list.size()),
+        [&](tbb::blocked_range<size_t> r) -> void
+        {   
+            for(size_t i = r.begin(); i < r.end(); i++)
+            {
+                auto t = triangle_list[i];
+                ProcessGeometry process_geometry;
+
+                // process geometry
+                TriangleGroup triangle_group;
+                process_geometry(t, triangle_group);
+
+                // rasterize and draw
+                for (auto& triangle: triangle_group.triangles)
+                {   
+                    Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
+                    rasterize(triangle, render_config.rasterize_config.line_color);
+                }
+            }
+        });
+    }
+    
     buffer_id RenderPipeline::addVertexBuffer(const std::vector<Vertex>& data) { return m_vertex_buffer_list.add(data); }
     buffer_id RenderPipeline::addVertexBuffer(std::unique_ptr<std::vector<Vertex>>&& data) {  return m_vertex_buffer_list.add(std::move(data)); }
 
@@ -119,108 +274,5 @@ namespace Chaotirender
         for (auto& pair: m_pixel_shader->texture_list)
             pair.second = nullptr;
         m_texture_buffer_list.clear();
-    }
-
-    void runPipelineParallel()
-    {
-        loadAsset("asset/spot/spot_triangulated_good.obj");
-
-        // load texture
-        RenderResource render_resource;
-        
-        std::shared_ptr<Texture> texture = render_resource.loadTexture("asset/spot/spot_texture.png");
-
-        bindPipelineBuffer();
-
-        SimpleVertexShader simple_vertex_shader;
-        SimplePixelShader  simple_pixel_shader;
-        TexturePixelShader texture_pixel_shader;
-
-        // simple_vertex_shader.model_matrix = glm::translate(simple_vertex_shader.model_matrix, glm::vec3(0, 0, -3));
-        glm::mat4 model_mat(1), view_mat, projection_mat;
-
-        model_mat = glm::rotate(model_mat, 3 * glm::pi<float>() / 4, glm::vec3(0, 1, 0));
-        // model_mat = glm::rotate(model_mat, glm::pi<float>() / 4, glm::vec3(1, 0, 0));
-        view_mat = glm::lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        projection_mat = glm::perspective(glm::half_pi<float>() / 2, 1.f, 0.1f, 100.f); // glm::perspective(glm::half_pi<float>(), 1.f, 0.1f, 10.f);
-        // projection_mat = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-
-        simple_vertex_shader.model_matrix = model_mat;
-        simple_vertex_shader.view_matrix = view_mat;
-        simple_vertex_shader.projection_matrix = projection_mat;
-
-        Light light;
-        light.position = glm::vec3(0, 0, 12);
-        light.color = glm::vec3(255, 255, 255);
-
-        texture_pixel_shader.light = light;
-        simple_pixel_shader.light = light;
-
-        g_pipeline_global_context.setVertexShader(&simple_vertex_shader);
-        // g_pipeline_global_context.setPixelShader(&simple_pixel_shader);
-        g_pipeline_global_context.setPixelShader(&texture_pixel_shader);
-
-        // texture->sample_type = SampleType::BILINEAR;
-        g_pipeline_global_context.bindTexture(texture);
-
-        std::cout << "faces: " << g_pipeline_global_context.index_buffer.size() / 3 << std::endl;
-
-        TICK(time);
-        parallel_render();
-        TOCK(time);
-
-        g_pipeline_global_context.color_buffer.write_tga_file("spotp.tga");
-        std::cout << "done" << std::endl;
-    }
-
-    void runPipeline()
-    {
-        loadAsset("asset/spot/spot_triangulated_good.obj");
-
-        // load texture
-        RenderResource render_resource;
-        
-        std::shared_ptr<Texture> texture = render_resource.loadTexture("asset/spot/spot_texture.png");
-
-        bindPipelineBuffer();
-
-        SimpleVertexShader simple_vertex_shader;
-        SimplePixelShader  simple_pixel_shader;
-        TexturePixelShader texture_pixel_shader;
-
-        // simple_vertex_shader.model_matrix = glm::translate(simple_vertex_shader.model_matrix, glm::vec3(0, 0, -3));
-        glm::mat4 model_mat(1), view_mat, projection_mat;
-
-        model_mat = glm::rotate(model_mat, 3 * glm::pi<float>() / 4, glm::vec3(0, 1, 0));
-        // model_mat = glm::rotate(model_mat, glm::pi<float>() / 4, glm::vec3(1, 0, 0));
-        view_mat = glm::lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        projection_mat = glm::perspective(glm::half_pi<float>() / 2, 1.f, 0.1f, 100.f); // glm::perspective(glm::half_pi<float>(), 1.f, 0.1f, 10.f);
-        // projection_mat = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-
-        simple_vertex_shader.model_matrix = model_mat;
-        simple_vertex_shader.view_matrix = view_mat;
-        simple_vertex_shader.projection_matrix = projection_mat;
-
-        Light light;
-        light.position = glm::vec3(0, 0, 12);
-        light.color = glm::vec3(255, 255, 255);
-
-        texture_pixel_shader.light = light;
-        simple_pixel_shader.light = light;
-
-        g_pipeline_global_context.setVertexShader(&simple_vertex_shader);
-        // g_pipeline_global_context.setPixelShader(&simple_pixel_shader);
-        g_pipeline_global_context.setPixelShader(&texture_pixel_shader);
-
-        // texture->sample_type = SampleType::BILINEAR;
-        g_pipeline_global_context.bindTexture(texture);
-
-        TICK(runtime)
-
-        g_pipeline_global_context.runPipeline();
-
-        TOCK(runtime)
-
-        g_pipeline_global_context.color_buffer.write_tga_file("spot.tga");
     }
 }
