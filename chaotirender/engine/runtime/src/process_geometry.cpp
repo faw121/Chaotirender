@@ -1,7 +1,6 @@
 #include <runtime/process_geometry.h>
 
-#include <glm/gtx/string_cast.hpp>
-#include <iostream>
+#include <runtime/debug.h>
 
 #include <cassert>
 #include <vector>
@@ -18,9 +17,44 @@ namespace Chaotirender
 
         // cliping
         clipTriangle(t);
+        
+        if (m_out_vertices.empty())
+            return;
 
         // assemble and map
         assembleAndMap(triangle_group);
+    }
+    
+    void ProcessGeometry::operator() (Triangle& t, LineGroup& line_group)
+    {
+        // vertex shading
+        g_render_pipeline.m_vertex_shader->shadeVertex(t.m_v0);
+        g_render_pipeline.m_vertex_shader->shadeVertex(t.m_v1);
+        g_render_pipeline.m_vertex_shader->shadeVertex(t.m_v2);
+
+        // clip lines
+        Line p0p1(t.m_v0.position_homo, t.m_v1.position_homo);
+        Line p1p2(t.m_v1.position_homo, t.m_v2.position_homo);
+        Line p2p0(t.m_v2.position_homo, t.m_v0.position_homo);
+
+        if (clipLine(p0p1))
+        {   
+            mapScreen(p0p1.m_p0);
+            mapScreen(p0p1.m_p1);
+            line_group.lines.push_back(p0p1);
+        }
+        if (clipLine(p1p2))
+        {   
+            mapScreen(p1p2.m_p0);
+            mapScreen(p1p2.m_p1);
+            line_group.lines.push_back(p1p2);
+        }
+        if (clipLine(p2p0))
+        {   
+            mapScreen(p2p0.m_p0);
+            mapScreen(p2p0.m_p1);
+            line_group.lines.push_back(p2p0);
+        }
     }
 
     void ProcessGeometry::clipTriangle(Triangle& triangle)
@@ -69,7 +103,7 @@ namespace Chaotirender
         for (int i = 0; i < 3; i++)
         {
             if (!code[i])
-                m_out_vertices.push_back(triangle.m_v0);
+                m_out_vertices.push_back(v[i]);
 
             int j = (i + 1) % 3;
             if (code[j] != code[i]) // pipj needs clipping
@@ -108,19 +142,102 @@ namespace Chaotirender
         }
     }
 
-    void ProcessGeometry::mapScreen(Vertex& v)
+    bool ProcessGeometry::clipLine(Line& line)
+    {   
+        unsigned int code0 = computeCodeXYZ(line.m_p0);
+        unsigned int code1 = computeCodeXYZ(line.m_p1);
+
+        while(1)
+        {   
+            if (!(code0 | code1)) // all in
+                break;
+            if (code0 & code1) // all out
+                return false; // not inside
+
+            // need to clip
+            // pick one end (bigger one is always outside)
+            unsigned int code_end = code0 > code1 ? code0 : code1;
+            glm::vec4 clipped_end;
+            glm::vec4 p0p1 = line.m_p1 - line.m_p0;
+
+            if (code_end & Top) //  y = w
+            {
+                float t = (line.m_p0.w - line.m_p0.y) / (p0p1.y - p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+
+            }
+            else if (code_end & Bottom) // y = -w
+            {
+                float t = (-line.m_p0.w - line.m_p0.y) / (p0p1.y + p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+            }
+            else if (code_end & Left) // x = -w
+            {
+                float t = (-line.m_p0.w - line.m_p0.x) / (p0p1.x + p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+            }
+            else if (code_end & Right) // x = w
+            {
+                float t = (line.m_p0.w - line.m_p0.x) / (p0p1.x - p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+            }
+            else if (code_end & Near) // z = -w
+            {
+                float t = (-line.m_p0.w - line.m_p0.z) / (p0p1.z + p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+            }
+            else if (code_end & Far) // z= w
+            {
+                float t = (line.m_p0.w - line.m_p0.z) / (p0p1.z - p0p1.w);
+                clipped_end = line.m_p0 + t * p0p1;
+            }
+
+            if (code_end == code0)
+            {
+                line.m_p0 = clipped_end;
+                code0 = computeCodeXYZ(line.m_p0);
+            }
+            else if (code_end == code1)
+            {
+                line.m_p1 = clipped_end;
+                code1 = computeCodeXYZ(line.m_p1);
+            }
+        }
+        return true;
+    }
+
+    unsigned int ProcessGeometry::computeCodeXYZ(glm::vec4 p)
+    {   
+        unsigned int code = 0;
+        if (p.x < -p.w - 0.001f)
+            code |= Left;
+        else if (p.x > p.w + 0.001f)
+            code |= Right;
+        if (p.y < -p.w - 0.001f)
+            code |= Bottom;
+        else if (p.y > p.w + 0.001f)
+            code |= Top;
+        if (p.z < -p.w - 0.001f)
+            code |= Near;
+        else if (p.z > p.w + 0.001f)
+            code |= Far;
+
+        return code;
+    }
+
+    void ProcessGeometry::mapScreen(glm::vec4& p)
     {
-        v.position_homo = g_render_pipeline.m_screen_mapping_matrix * v.position_homo;
+        p = g_render_pipeline.m_screen_mapping_matrix * p;
     }
 
     void ProcessGeometry::assembleAndMap(TriangleGroup& triangle_group)
-    {
-        mapScreen(m_out_vertices[0]);
-        mapScreen(m_out_vertices[1]);
+    {   
+        mapScreen(m_out_vertices[0].position_homo);
+        mapScreen(m_out_vertices[1].position_homo);
 
 		for (int i = 1; i < m_out_vertices.size() - 1; i++)
 		{   
-			mapScreen(m_out_vertices[i + 1]);
+			mapScreen(m_out_vertices[i + 1].position_homo);
 			triangle_group.triangles.push_back(Triangle(m_out_vertices[0], m_out_vertices[i], m_out_vertices[i + 1]));
 		}
     }

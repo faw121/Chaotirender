@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cassert>
 
 namespace Chaotirender
 {
@@ -38,13 +39,15 @@ namespace Chaotirender
 
     template <typename T>
     T Buffer2D<T>::get(int i, int j) const
-    {
+    {   
+        assert(i < m_w && j < m_h);
         return m_data[j * m_w + i];
     }
 
     template <typename T>
     void Buffer2D<T>::set(int i, int j, const T& value)
     {
+        assert(i < m_w && j < m_h);
         m_data[j * m_w + i] = value;
     }
 

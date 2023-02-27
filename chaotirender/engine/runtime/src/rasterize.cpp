@@ -180,20 +180,12 @@ namespace Chaotirender
         }
     }
 
-    void Rasterize::operator()(Triangle& triangle, Color color)
+    void Rasterize::operator()(Line& line, Color color)
     {   
-        glm::vec4 p0 = triangle.m_v0.position_homo;
-        glm::vec4 p1 = triangle.m_v1.position_homo;
-        glm::vec4 p2 = triangle.m_v2.position_homo;
+        line.m_p0 /= line.m_p0.w;
+        line.m_p1 /= line.m_p1.w;       
 
-        // perspective division
-        p0 /= p0.w;
-        p1 /= p1.w;
-        p2 /= p2.w; 
-
-        rasterizeLine(p0.x, p0.y, p1.x, p1.y, color);
-        rasterizeLine(p1.x, p1.y, p2.x, p2.y, color);
-        rasterizeLine(p2.x, p2.y, p0.x, p0.y, color);
+        rasterizeLine(line.m_p0.x, line.m_p0.y, line.m_p1.x, line.m_p1.y, color);
     }
 
     void Rasterize::rasterizeLine(float x0_, float y0_, float x1_, float y1_, Color color)
@@ -205,6 +197,16 @@ namespace Chaotirender
         x1 = static_cast<int>(x1_);
         y0 = static_cast<int>(y0_);
         y1 = static_cast<int>(y1_);
+
+        if (x0 >= m_w)
+            x0 = m_w - 1;
+        if (x1 >= m_w)
+            x1 = m_w - 1;
+        if (y0 >= m_h)
+            y0 = m_h - 1;
+        if (y1 >= m_h)
+            y1 = m_h - 1;
+
         dx = x1 - x0;
         dy = y1 - y0;
 
@@ -244,8 +246,14 @@ namespace Chaotirender
             err = -dx_abs;
             sy = -1; 
         }
+
         for (x; x <= x1; x++)
         {   
+            if (x < 0)
+                x = 0;
+            if (y < 0)
+                y = 0;
+
             if (swapxy)
                 g_render_pipeline.frame_buffer.setColor(y, x, color);
             else

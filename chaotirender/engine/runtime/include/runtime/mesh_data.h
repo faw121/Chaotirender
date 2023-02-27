@@ -73,4 +73,17 @@ namespace Chaotirender
     {
         std::vector<Triangle> triangles;
     };
+
+    struct Line
+    {
+        glm::vec4 m_p0;
+        glm::vec4 m_p1;
+
+        Line(glm::vec4 p0, glm::vec4 p1): m_p0(p0), m_p1(p1) {}
+    };
+
+    struct LineGroup
+    {
+        std::vector<Line> lines;
+    };
 }

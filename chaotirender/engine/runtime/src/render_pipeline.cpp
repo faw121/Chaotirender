@@ -1,20 +1,9 @@
 #include <runtime/render_pipeline.h>
 
-#include <runtime/asset_manager.h>
-#include <runtime/render_resource.h>
-
-#include <runtime/simple_vertex_shader.h>
-#include <runtime/simple_pixel_shader.h>
-#include <runtime/texture_pixel_shader.h>
-
 #include <runtime/process_geometry.h>
 #include <runtime/rasterize.h>
 
-#include <glm/gtx/string_cast.hpp>
-
-#include <iostream>
-#include <chrono>
-
+#include <runtime/debug.h>
 #include <runtime/tick_tock.h>
 
 namespace Chaotirender
@@ -54,13 +43,14 @@ namespace Chaotirender
         // assemble triangle
         std::vector<Triangle> triangle_list;
         VertexBuffer& vertex_buffer = *m_vertex_buffer;
+        IndexBuffer& index_buffer = *m_index_buffer;
 
-        int num_faces = m_index_buffer->size() / 3;
+        int num_faces = index_buffer.size() / 3;
 
         for (int f = 0; f < num_faces; f++)
         {
             int index_base = 3 * f;
-            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+            Triangle t(vertex_buffer[index_buffer[index_base + 0]], vertex_buffer[index_buffer[index_base + 1]], vertex_buffer[index_buffer[index_base + 2]]);
 
             t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
             t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
@@ -94,13 +84,14 @@ namespace Chaotirender
     void RenderPipeline::drawTriangleSerial()
     {
         VertexBuffer& vertex_buffer = *(m_vertex_buffer);
+        IndexBuffer& index_buffer = *(m_index_buffer);
 
         int num_faces = m_index_buffer->size() / 3;
 
         for (int f = 0; f < num_faces; f++)
         {
             int index_base = 3 * f;
-            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+            Triangle t(vertex_buffer[index_buffer[index_base + 0]], vertex_buffer[index_buffer[index_base + 1]], vertex_buffer[index_buffer[index_base + 2]]);
 
             t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
             t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
@@ -122,27 +113,28 @@ namespace Chaotirender
     void RenderPipeline::drawWireframeSerial()
     {
         VertexBuffer& vertex_buffer = *(m_vertex_buffer);
+        IndexBuffer& index_buffer = *(m_index_buffer);
 
         int num_faces = m_index_buffer->size() / 3;
 
         for (int f = 0; f < num_faces; f++)
         {
             int index_base = 3 * f;
-            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+            Triangle t(vertex_buffer[index_buffer[index_base + 0]], vertex_buffer[index_buffer[index_base + 1]], vertex_buffer[index_buffer[index_base + 2]]);
 
             t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
             t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
             t.m_v2.position_homo = glm::vec4(t.m_v2.position, 1);
 
-            TriangleGroup triangle_group;
+            LineGroup line_group;
             ProcessGeometry process_geometry;
-            process_geometry(t, triangle_group);
+            process_geometry(t, line_group);
 
             // rasterize and draw
-            for (auto& triangle: triangle_group.triangles)
+            for (auto& line: line_group.lines)
             {   
                 Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
-                rasterize(triangle, render_config.rasterize_config.line_color);
+                rasterize(line, render_config.rasterize_config.line_color);
             }
         }
     }
@@ -152,13 +144,14 @@ namespace Chaotirender
         // assemble triangle
         std::vector<Triangle> triangle_list;
         VertexBuffer& vertex_buffer = *m_vertex_buffer;
+        IndexBuffer& index_buffer = *m_index_buffer;
 
         int num_faces = m_index_buffer->size() / 3;
 
         for (int f = 0; f < num_faces; f++)
         {
             int index_base = 3 * f;
-            Triangle t(vertex_buffer[index_base + 0], vertex_buffer[index_base + 1], vertex_buffer[index_base + 2]);
+            Triangle t(vertex_buffer[index_buffer[index_base + 0]], vertex_buffer[index_buffer[index_base + 1]], vertex_buffer[index_buffer[index_base + 2]]);
 
             t.m_v0.position_homo = glm::vec4(t.m_v0.position, 1);
             t.m_v1.position_homo = glm::vec4(t.m_v1.position, 1);
@@ -176,14 +169,14 @@ namespace Chaotirender
                 ProcessGeometry process_geometry;
 
                 // process geometry
-                TriangleGroup triangle_group;
-                process_geometry(t, triangle_group);
+                LineGroup line_group;
+                process_geometry(t, line_group);
 
                 // rasterize and draw
-                for (auto& triangle: triangle_group.triangles)
+                for (auto& line: line_group.lines)
                 {   
                     Rasterize rasterize(g_render_pipeline.m_w, g_render_pipeline.m_h);
-                    rasterize(triangle, render_config.rasterize_config.line_color);
+                    rasterize(line, render_config.rasterize_config.line_color);
                 }
             }
         });

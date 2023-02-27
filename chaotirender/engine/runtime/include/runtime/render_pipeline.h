@@ -109,6 +109,7 @@ namespace Chaotirender
 
         int m_w;
         int m_h;
+
         glm::mat4 m_screen_mapping_matrix;
     };
 
