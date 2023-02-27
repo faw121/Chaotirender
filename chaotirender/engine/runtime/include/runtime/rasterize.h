@@ -31,7 +31,7 @@ namespace Chaotirender
 
         void operator()(Triangle& triangle);
         
-        void operator()(Triangle& triangle, Color color);
+        void operator()(Line& line, Color color);
 
     private:
         float evaluateEdgeEquation(float x, float y, EdgeEquation& e);

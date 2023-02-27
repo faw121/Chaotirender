@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <runtime/render_pipeline.h>
+#include <runtime/camera.h>
 
 #include <runtime/test.h>
 
@@ -15,9 +16,124 @@
 // 2. does renderPipeline need to be global?
 // 3. tile based: performance and mipmap
 
+float m_mouse_x = 0;
+float m_mouse_y = 0;
+Chaotirender::Camera camera;
+
+std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
+std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
+
+enum class EditorCommand : unsigned int
+{
+    camera_left      = 1 << 0,  // A
+    camera_back      = 1 << 1,  // S
+    camera_foward    = 1 << 2,  // W
+    camera_right     = 1 << 3,  // D
+    camera_up        = 1 << 4,  // Q
+    camera_down      = 1 << 5,  // E
+    translation_mode = 1 << 6,  // T
+    rotation_mode    = 1 << 7,  // R
+    scale_mode       = 1 << 8,  // C
+    exit             = 1 << 9,  // Esc
+    delete_object    = 1 << 10, // Delete
+};
+
+unsigned int m_editor_command {0};
+unsigned int k_complement_control_command = 0xFFFFFFFF;
+
+static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void processEditorCommand();
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+void initScene()
+{
+    auto vertex_buffer = std::make_unique<Chaotirender::VertexBuffer>();
+    auto index_buffer = std::make_unique<Chaotirender::IndexBuffer>();
+
+    simple_vertex_shader = std::make_shared<Chaotirender::SimpleVertexShader>();
+    texture_pixel_shader = std::make_shared<Chaotirender::TexturePixelShader>();
+
+    Chaotirender::setUp(*vertex_buffer, *index_buffer, *simple_vertex_shader, *texture_pixel_shader);
+
+    camera.setFov(glm::half_pi<float>() / 2);
+
+    camera.lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+    Chaotirender::buffer_id vid = Chaotirender::g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
+    Chaotirender::g_render_pipeline.bindVertexBuffer(vid);
+
+    Chaotirender::buffer_id iid = Chaotirender::g_render_pipeline.addIndexBuffer(std::move(index_buffer));
+    Chaotirender::g_render_pipeline.bindIndexBuffer(iid);
+
+    Chaotirender::g_render_pipeline.setVertexShader(simple_vertex_shader);
+    Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
+
+    int w, h, n;
+    Chaotirender::RenderResource render_resource;
+    // auto texture = render_resource.loadTexture("asset/spot/spot_texture.png");
+    //  texture->m_sample_type = SampleType::BILINEAR;
+    // texture_pixel_shader->texture = texture;
+    auto raw = render_resource.loadRawTexture("asset/spot/spot_texture.png", w, h, n);
+    auto id = Chaotirender::g_render_pipeline.addTexture(w, h, n, raw);
+    Chaotirender::g_render_pipeline.bindPixelShaderTexture(id, "texture", Chaotirender::SampleType::BILINEAR);
+}
+
+void initClippingScene()
+{
+    auto vertex_buffer = std::make_unique<Chaotirender::VertexBuffer>();
+    auto index_buffer = std::make_unique<Chaotirender::IndexBuffer>();
+
+    vertex_buffer->push_back(Chaotirender::Vertex(0, 0, 0));
+    vertex_buffer->push_back(Chaotirender::Vertex(0.8f, -0.5f, -2));
+    vertex_buffer->push_back(Chaotirender::Vertex(0.8f, 0.5f, -2));
+    vertex_buffer->push_back(Chaotirender::Vertex(-0.8f, -0.5f, -2));
+    vertex_buffer->push_back(Chaotirender::Vertex(-0.8f, 0.5f, -2));
+
+    // index_buffer->push_back(0);
+    // index_buffer->push_back(1);
+    // index_buffer->push_back(2);
+
+    // index_buffer->push_back(0);
+    // index_buffer->push_back(2);
+    // index_buffer->push_back(4);
+
+    index_buffer->push_back(0);
+    index_buffer->push_back(4);
+    index_buffer->push_back(3);
+
+    // index_buffer->push_back(0);
+    // index_buffer->push_back(3);
+    // index_buffer->push_back(1);
+
+    // index_buffer->push_back(1);
+    // index_buffer->push_back(2);
+    // index_buffer->push_back(4);
+
+    // index_buffer->push_back(4);
+    // index_buffer->push_back(3);
+    // index_buffer->push_back(1);
+
+    simple_vertex_shader = std::make_shared<Chaotirender::SimpleVertexShader>();
+    texture_pixel_shader = std::make_shared<Chaotirender::TexturePixelShader>();
+
+    camera.setFov(glm::half_pi<float>() / 2);
+
+    camera.lookAt(glm::vec3(0, 0, -1.f), glm::vec3(0, 0, -5), glm::vec3(0, 1, 0));
+
+    Chaotirender::buffer_id vid = Chaotirender::g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
+    Chaotirender::g_render_pipeline.bindVertexBuffer(vid);
+
+    Chaotirender::buffer_id iid = Chaotirender::g_render_pipeline.addIndexBuffer(std::move(index_buffer));
+    Chaotirender::g_render_pipeline.bindIndexBuffer(iid);
+
+    Chaotirender::g_render_pipeline.setVertexShader(simple_vertex_shader);
+    Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
 }
 
 int main(int argc, char** argv) 
@@ -25,8 +141,6 @@ int main(int argc, char** argv)
     // TODO: 
     // 1. shader define variables: atrribute, varying, uniform
     // 2. does renderPipeline need to be global?
-    // Chaotirender::runPipeline();
-    // Chaotirender::test();
     // Chaotirender::initScene();
     // int w, h;
     // const uint8_t* data;
@@ -44,11 +158,15 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
+    glfwSetCursorPosCallback(window, cursorPosCallback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, keyCallback);
 
     // opengl loader
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -94,7 +212,8 @@ int main(int argc, char** argv)
     int w, h;
     const uint8_t* scene_data = nullptr;
 
-    Chaotirender::initScene();
+    initScene();
+    // initClippingScene();
 
     glGenTextures(1, &scene_tex_id);
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
@@ -119,6 +238,10 @@ int main(int argc, char** argv)
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
+        processEditorCommand();
+
+        simple_vertex_shader->view_matrix = camera.getViewMatrix();
+        simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
         // TICK(draw)
         Chaotirender::drawAndGetScene(w, h, scene_data);
         // TOCK(draw)
@@ -172,9 +295,6 @@ int main(int argc, char** argv)
         glfwSwapBuffers(window);
         // TOCK(render)
     }
-#ifdef __EMSCRIPTEN__
-    EMSCRIPTEN_MAINLOOP_END;
-#endif
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
@@ -185,4 +305,157 @@ int main(int argc, char** argv)
     glfwTerminate();
 
     return 0;
+}
+
+bool isMouseButtonDown(GLFWwindow* window, int button)
+{
+    if (button < GLFW_MOUSE_BUTTON_1 || button > GLFW_MOUSE_BUTTON_LAST)
+    {
+        return false;
+    }
+    return glfwGetMouseButton(window, button) == GLFW_PRESS;
+}
+
+static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{
+    float angularVelocity =
+            180.0f / glm::max(Chaotirender::g_render_pipeline.frame_buffer.getWidth(), Chaotirender::g_render_pipeline.frame_buffer.getHeight()); // 180 degrees while moving full screen
+    if (m_mouse_x >= 0.0f && m_mouse_y >= 0.0f)
+    {
+        if (isMouseButtonDown(window, GLFW_MOUSE_BUTTON_RIGHT))
+        {
+            glfwSetInputMode(
+                window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            camera.rotate(
+                (ypos - m_mouse_y) * angularVelocity, (xpos - m_mouse_x) * angularVelocity);
+        }
+        else
+            glfwSetInputMode(
+                window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        m_mouse_x = xpos;
+        m_mouse_y = ypos;
+    }
+}
+
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.zoom(2.f * yoffset);
+}
+
+void processEditorCommand()
+{
+    float           camera_speed  = 0.05f;
+
+    // glm::quat      camera_rotate = editor_camera->rotation().inverse();
+    glm::vec3         camera_relative_pos(0, 0, 0);
+
+    if ((unsigned int)EditorCommand::camera_foward & m_editor_command)
+    {
+        camera_relative_pos += camera_speed * camera.forward();
+    }
+    if ((unsigned int)EditorCommand::camera_back & m_editor_command)
+    {
+        camera_relative_pos += -camera_speed * camera.forward();
+    }
+    if ((unsigned int)EditorCommand::camera_left & m_editor_command)
+    {
+        camera_relative_pos += -camera_speed * camera.right();
+    }
+    if ((unsigned int)EditorCommand::camera_right & m_editor_command)
+    {
+        camera_relative_pos += camera_speed * camera.right();
+    }
+    if ((unsigned int)EditorCommand::camera_up & m_editor_command)
+    {
+        camera_relative_pos += glm::vec3(0, camera_speed, 0);
+    }
+    if ((unsigned int)EditorCommand::camera_down & m_editor_command)
+    {
+        camera_relative_pos += glm::vec3(0, -camera_speed, 0);;
+    }
+
+    camera.move(camera_relative_pos);
+}
+
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_PRESS)
+    {
+        switch (key)
+        {
+            case GLFW_KEY_A:
+                m_editor_command |= (unsigned int)EditorCommand::camera_left;
+                break;
+            case GLFW_KEY_S:
+                m_editor_command |= (unsigned int)EditorCommand::camera_back;
+                break;
+            case GLFW_KEY_W:
+                m_editor_command |= (unsigned int)EditorCommand::camera_foward;
+                break;
+            case GLFW_KEY_D:
+                m_editor_command |= (unsigned int)EditorCommand::camera_right;
+                break;
+            case GLFW_KEY_Q:
+                m_editor_command |= (unsigned int)EditorCommand::camera_up;
+                break;
+            case GLFW_KEY_E:
+                m_editor_command |= (unsigned int)EditorCommand::camera_down;
+                break;
+            case GLFW_KEY_T:
+                m_editor_command |= (unsigned int)EditorCommand::translation_mode;
+                break;
+            case GLFW_KEY_R:
+                m_editor_command |= (unsigned int)EditorCommand::rotation_mode;
+                break;
+            case GLFW_KEY_C:
+                m_editor_command |= (unsigned int)EditorCommand::scale_mode;
+                break;
+            case GLFW_KEY_DELETE:
+                m_editor_command |= (unsigned int)EditorCommand::delete_object;
+                break;
+            default:
+                break;
+        }
+    }
+    else if (action == GLFW_RELEASE)
+    {
+        switch (key)
+        {
+            case GLFW_KEY_ESCAPE:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::exit);
+                break;
+            case GLFW_KEY_A:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_left);
+                break;
+            case GLFW_KEY_S:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_back);
+                break;
+            case GLFW_KEY_W:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_foward);
+                break;
+            case GLFW_KEY_D:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_right);
+                break;
+            case GLFW_KEY_Q:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_up);
+                break;
+            case GLFW_KEY_E:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_down);
+                break;
+            case GLFW_KEY_T:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::translation_mode);
+                break;
+            case GLFW_KEY_R:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::rotation_mode);
+                break;
+            case GLFW_KEY_C:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::scale_mode);
+                break;
+            case GLFW_KEY_DELETE:
+                m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::delete_object);
+                break;
+            default:
+                break;
+        }
+    }
 }
