@@ -10,6 +10,6 @@ namespace Chaotirender
     {
         float k = glm::dot(glm::normalize(light.position - fragment.world_position), glm::normalize(fragment.normal));
         k = k < 0 ? 0 : k;
-        fragment.color = light.color * k; 
+        fragment.color = light.intensity * k; 
     }
 } 

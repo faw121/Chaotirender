@@ -36,7 +36,7 @@ namespace Chaotirender
 
         Light light;
         light.position = glm::vec3(0, 0, 12);
-        light.color = glm::vec3(255, 255, 255);
+        light.intensity = glm::vec3(255, 255, 255);
 
         texture_pixel_shader.light = light;
     }

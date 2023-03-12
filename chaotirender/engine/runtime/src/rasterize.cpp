@@ -168,11 +168,14 @@ namespace Chaotirender
                     // interpolate attributes
                     barycentric();
 
-                    fragment.depth = 1 / m_w_inverse; // absolute value
+                    // fragment.depth = 1 / m_w_inverse; // absolute value, doesn't work for othorgonal
+                    fragment.depth = (m_alphaw * p0.z + m_betaw * p1.z + m_gammaw * p2.z) / m_w_inverse;
 
                     fragment.normal = (m_alphaw * triangle.m_v0.normal + m_betaw * triangle.m_v1.normal + m_gammaw * triangle.m_v2.normal) / m_w_inverse;
 
                     fragment.uv = (m_alphaw * triangle.m_v0.uv + m_betaw * triangle.m_v1.uv + m_gammaw * triangle.m_v2.uv) / m_w_inverse;
+
+                    fragment.world_position = (m_alphaw * triangle.m_v0.world_position + m_betaw * triangle.m_v1.world_position + m_gammaw * triangle.m_v2.world_position) / m_w_inverse;
 
                     (this->*drawPixel_ptr)(fragment);
                 }
@@ -275,6 +278,7 @@ namespace Chaotirender
         if (fragment.depth < g_render_pipeline.frame_buffer.getDepth(i, j))
         {   
             g_render_pipeline.frame_buffer.setDepth(i, j, fragment.depth);
+            fragment.color = glm::min(fragment.color, glm::vec3(255.f, 255.f, 255.f));
             g_render_pipeline.frame_buffer.setColor(i, j, Color(static_cast<uint8_t>(fragment.color.x + 0.5f), static_cast<uint8_t>(fragment.color.y + 0.5f), static_cast<uint8_t>(fragment.color.z + 0.5f)));
         }
     }
@@ -287,6 +291,7 @@ namespace Chaotirender
         {   
             g_render_pipeline.m_pixel_shader->shadePixel(fragment);
             g_render_pipeline.frame_buffer.setDepth(i, j, fragment.depth);
+            fragment.color = glm::min(fragment.color, glm::vec3(255.f, 255.f, 255.f));
             g_render_pipeline.frame_buffer.setColor(i, j, Color(static_cast<uint8_t>(fragment.color.x + 0.5f), static_cast<uint8_t>(fragment.color.y + 0.5f), static_cast<uint8_t>(fragment.color.z + 0.5f)));
         }
     }

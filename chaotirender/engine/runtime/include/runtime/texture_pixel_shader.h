@@ -11,5 +11,7 @@ namespace Chaotirender
         virtual void shadePixel(Fragment& fragment) override;
 
         Light light;
+
+        glm::vec3 camera_position;
     };
 }

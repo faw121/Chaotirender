@@ -7,6 +7,6 @@ namespace Chaotirender
     struct Light
     {
         glm::vec3 position;
-        glm::vec3 color;
+        glm::vec3 intensity;
     };
 }

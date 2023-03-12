@@ -12,11 +12,12 @@ namespace Chaotirender
         glm::mat4 mvp = projection_matrix * mv;
         
         // compute light in world space 
-        glm::mat3 normal_matrix = glm::inverseTranspose(mv);
-
+        glm::mat3 normal_matrix = glm::inverseTranspose(model_matrix);
+        
+        v.world_position = glm::vec3(model_matrix * v.position_homo);
         v.position_homo = mvp * v.position_homo;
         v.normal = normal_matrix * v.normal;
 
-        v.world_position = mv * v.position_homo;
+        
     }
 }
