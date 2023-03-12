@@ -5,6 +5,7 @@
 #include <glm/vec4.hpp>
 
 #include <vector>
+#include <memory>
 #include <map>
 #include <any>
 #include <string>
@@ -53,11 +54,8 @@ namespace Chaotirender
 
     typedef unsigned int index_t;
 
-    struct MeshData
-    {
-        std::vector<Vertex> vertex_buffer;
-        std::vector<int>    index_buffer;
-    };
+    using VertexBuffer = std::vector<Vertex>;
+    using IndexBuffer = std::vector<index_t>;
 
     struct Triangle
     {
@@ -85,5 +83,49 @@ namespace Chaotirender
     struct LineGroup
     {
         std::vector<Line> lines;
+    };
+
+    struct RawTexture
+    {
+        std::string tex_file_name; // relative path to resource folder
+
+        int width;
+        int height;
+        int channels;
+        uint8_t* texels {nullptr};
+    };
+
+    struct RawMaterial
+    {
+        std::string name;
+
+        glm::vec3 ka {0.f, 0.f, 0.f};
+        glm::vec3 kd {0.f, 0.f, 0.f};
+        glm::vec3 ks {0.f, 0.f, 0.f};
+        float shininess {0.f};
+
+        // TODO: not sure about material model, phong? metallic what what?
+        RawTexture ambient_texture;
+        RawTexture diffuse_texture;
+        RawTexture specular_texture;
+        RawTexture normal_texture;
+    };
+
+    using buffer_id = int;
+
+    struct RawMesh
+    {
+        RawMaterial material;
+
+        buffer_id vertex_buffer_id {-1};
+        buffer_id index_buffer_id {-1};
+
+        buffer_id ambient_tex_id {-1};
+        buffer_id diffuse_tex_id {-1};
+        buffer_id specular_tex_id {-1};
+        buffer_id normal_tex_id {-1};
+
+        VertexBuffer vertex_buffer;
+        IndexBuffer  index_buffer;
     };
 }

@@ -1,7 +1,8 @@
 #include <iostream>
 
 #include <runtime/render_pipeline.h>
-#include <runtime/camera.h>
+#include <editor/camera.h>
+#include <editor/render_scene.h>
 
 #include <runtime/test.h>
 
@@ -136,17 +137,30 @@ void initClippingScene()
     Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
 }
 
+void initScene(std::string asset_path)
+{
+    Chaotirender::loadAsset(asset_path);
+    std::vector<Chaotirender::RawMesh> meshes;
+    Chaotirender::getMeshData(meshes);
+    
+}
+
 int main(int argc, char** argv) 
 {   
     // TODO: 
     // 1. shader define variables: atrribute, varying, uniform
     // 2. does renderPipeline need to be global?
+    // 3. when render area is large, fps drops
+
     // Chaotirender::initScene();
     // int w, h;
     // const uint8_t* data;
     // Chaotirender::drawAndGetScene(w, h, data);
     // Chaotirender::test();
 
+    // 1. wrap window, seperate ui, io
+    // 2. load meterial?
+    // testLoad();
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -243,6 +257,7 @@ int main(int argc, char** argv)
         simple_vertex_shader->view_matrix = camera.getViewMatrix();
         simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
         // TICK(draw)
+        texture_pixel_shader->camera_position = camera.position();
         Chaotirender::drawAndGetScene(w, h, scene_data);
         // TOCK(draw)
 

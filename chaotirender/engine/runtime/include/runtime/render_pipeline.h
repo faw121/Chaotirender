@@ -43,8 +43,6 @@ namespace Chaotirender
         ShadingConfig shading_config;
     };
 
-    using VertexBuffer = std::vector<Vertex>;
-    using IndexBuffer = std::vector<index_t>;
     using VertexBufferList = BufferList<VertexBuffer>;
     using IndexBufferList = BufferList<IndexBuffer>;
     using TextureBufferList = BufferList<Texture>;

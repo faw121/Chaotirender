@@ -36,7 +36,7 @@ namespace Chaotirender
         glm::quat m_rotation {1.f, 0.f, 0.f, 0.f};
         glm::quat m_invRotation {1.f, 0.f, 0.f, 0.f};
 
-        float m_znear {1.f};
+        float m_znear {0.1f};
         float m_zfar {1000.f};
         
         glm::vec3 m_up_axis {Y}; // up is Y
