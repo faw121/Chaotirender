@@ -56,7 +56,7 @@ namespace Chaotirender
         // textures
         // TODO: just bind diffuse here
         if (material.diffuse_tex_id != -1)
-            g_render_pipeline.bindPixelShaderTexture(material.ambient_tex_id, "diffuse_texture", tex_sample_type); 
+            g_render_pipeline.bindPixelShaderTexture(material.diffuse_tex_id, "diffuse_texture", tex_sample_type); 
     }
 
     void Mesh::draw()

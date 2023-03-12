@@ -1,6 +1,6 @@
 #pragma once
 
-#include <editor/camera.h>
+#include <runtime/camera.h>
 #include <runtime/render_object.h>
 #include <runtime/simple_vertex_shader.h>
 #include <runtime/texture_pixel_shader.h>

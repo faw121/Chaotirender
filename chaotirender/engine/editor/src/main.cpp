@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include <runtime/render_pipeline.h>
-#include <editor/camera.h>
-#include <editor/render_scene.h>
+#include <runtime/camera.h>
+#include <runtime/render_scene.h>
 
 #include <runtime/test.h>
 
