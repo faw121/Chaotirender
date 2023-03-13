@@ -3,7 +3,6 @@
 #include <stb_image.h>
 
 #include <iostream>
-#include <filesystem>
 
 #include <runtime/debug.h>
 
@@ -13,11 +12,13 @@ namespace Chaotirender
     {
         tinyobj::ObjReaderConfig reader_config;
 
-        std::filesystem::path asset_folder(asset_path);
-        asset_folder = asset_folder.parent_path();
+        m_asset_folder = asset_path;
+        m_asset_folder = m_asset_folder.parent_path();
+        // std::filesystem::path asset_folder(asset_path);
+        // asset_folder = asset_folder.parent_path();
 
         // .mtl search path: current folder
-        reader_config.mtl_search_path = asset_folder.string();
+        reader_config.mtl_search_path = m_asset_folder.string();
 
         if (!obj_reader.ParseFromFile(asset_path, reader_config)) 
         {
@@ -30,9 +31,8 @@ namespace Chaotirender
         return true;
     }
 
-    RenderObjectResource AssetManager::getObjectResource(std::string asset_path)
+    void AssetManager::getObjectResource(std::string asset_path, RenderObjectResource& resource)
     {   
-        RenderObjectResource resource;
         resource.name = asset_path;
         if (loadAsset(asset_path))
         {
@@ -40,7 +40,6 @@ namespace Chaotirender
 
             getTextureData(resource);
         }
-        return resource;
     }
 
     void AssetManager::getTextureData(RenderObjectResource& object_resource)
@@ -48,8 +47,9 @@ namespace Chaotirender
         for (auto& mesh: object_resource.mesh_list)
         {
             std::string tex_name = mesh.material.diffuse_texture.tex_file_name;
+            std::string tex_path = m_asset_folder.string() + "/" + tex_name;
             if (!tex_name.empty())
-                mesh.material.diffuse_texture.texels = loadRawTexture(tex_name, 
+                mesh.material.diffuse_texture.texels = loadRawTexture(tex_path, 
                     mesh.material.diffuse_texture.width, mesh.material.diffuse_texture.height, mesh.material.diffuse_texture.channels);
         }
     }
@@ -60,13 +60,13 @@ namespace Chaotirender
         auto& shapes     = obj_reader.GetShapes();
         auto& materials  = obj_reader.GetMaterials();
 
-        int vertex_index = 0;
-
         // for each shape
         for (size_t s = 0; s < shapes.size(); s++)
         {   
             // current offset
-            size_t index_offset = 0;
+            size_t face_index_offset = 0;
+
+            int vertex_index = 0;
 
             object_resource.mesh_list.push_back(RawMesh());
 
@@ -82,7 +82,7 @@ namespace Chaotirender
                 for (size_t v = 0; v < num_f; v++)
                 {
                     // index of position, normal, texture
-                    tinyobj::index_t index = shapes[s].mesh.indices[index_offset + v];
+                    tinyobj::index_t index = shapes[s].mesh.indices[face_index_offset + v];
 
                     tinyobj::real_t vx = attributes.vertices[3 * size_t(index.vertex_index) + 0];
                     tinyobj::real_t vy = attributes.vertices[3 * size_t(index.vertex_index) + 1];
@@ -113,7 +113,7 @@ namespace Chaotirender
                     mesh.index_buffer.push_back(vertex_index);
                     vertex_index++;
                 }
-                index_offset += num_f;
+                face_index_offset += num_f;
                 material_index = shapes[s].mesh.material_ids[f];
             }
             if (material_index > -1)

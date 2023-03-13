@@ -33,7 +33,7 @@ namespace Chaotirender
         }
     }
 
-    Mesh::Mesh(RawMesh raw_mesh)
+    Mesh::Mesh(const RawMesh& raw_mesh)
     {
         vertex_buffer_id = raw_mesh.vertex_buffer_id;
         index_buffer_id = raw_mesh.index_buffer_id;
@@ -46,9 +46,8 @@ namespace Chaotirender
         material.shininess = raw_mesh.material.shininess;
     }
 
-    // TODO: should handle shader-specify data else-where
-    void Mesh::bindDataToPipeline(SampleType tex_sample_type)
-    {
+    void Mesh::draw(SampleType tex_sample_type)
+    {   
         // vertex and index data
         g_render_pipeline.bindVertexBuffer(vertex_buffer_id);
         g_render_pipeline.bindIndexBuffer(index_buffer_id);
@@ -57,14 +56,11 @@ namespace Chaotirender
         // TODO: just bind diffuse here
         if (material.diffuse_tex_id != -1)
             g_render_pipeline.bindPixelShaderTexture(material.diffuse_tex_id, "diffuse_texture", tex_sample_type); 
-    }
 
-    void Mesh::draw()
-    {
         g_render_pipeline.draw();
     }
 
-    RenderObjectInstance::RenderObjectInstance(RenderObjectResource resource)
+    RenderObjectInstance::RenderObjectInstance(const RenderObjectResource& resource)
     {
         for (auto& raw_mesh: resource.mesh_list)
         {

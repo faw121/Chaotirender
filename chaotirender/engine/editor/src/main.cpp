@@ -19,10 +19,13 @@
 
 float m_mouse_x = 0;
 float m_mouse_y = 0;
-Chaotirender::Camera camera;
+// Chaotirender::Camera camera;
 
 std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
 std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
+
+Chaotirender::RenderScene render_scene;
+Chaotirender::Camera& camera = render_scene.m_camera;
 
 enum class EditorCommand : unsigned int
 {
@@ -138,11 +141,33 @@ void initClippingScene()
 }
 
 void initScene(std::string asset_path)
+{   
+    // fetch resource
+    Chaotirender::AssetManager asset_manager;
+    Chaotirender::RenderObjectResource object_resource;
+    asset_manager.getObjectResource(asset_path, object_resource);
+
+    object_resource.addDataToPipeline();
+
+    // instantiate
+    // Chaotirender::RenderObjectInstance object_instance(object_resource);
+
+    // add to scene
+    render_scene.init();
+    render_scene.m_object_list.push_back(Chaotirender::RenderObjectInstance(object_resource));
+}
+
+void drawAndGetScene(int& scene_w, int& scene_h, const uint8_t*& data)
 {
-    Chaotirender::loadAsset(asset_path);
-    std::vector<Chaotirender::RawMesh> meshes;
-    Chaotirender::getMeshData(meshes);
-    
+    Chaotirender::g_render_pipeline.frame_buffer.clear();
+
+    // Chaotirender::g_render_pipeline.render_config.enable_parallel = false;
+
+    render_scene.draw();
+
+    scene_w = Chaotirender::g_render_pipeline.frame_buffer.getWidth();
+    scene_h = Chaotirender::g_render_pipeline.frame_buffer.getHeight();
+    data = (const uint8_t*) Chaotirender::g_render_pipeline.frame_buffer.getColorBuffer();
 }
 
 int main(int argc, char** argv) 
@@ -227,7 +252,7 @@ int main(int argc, char** argv)
     const uint8_t* scene_data = nullptr;
 
     initScene();
-    // initClippingScene();
+    initScene("asset/mary/Marry.obj");
 
     glGenTextures(1, &scene_tex_id);
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
@@ -254,11 +279,13 @@ int main(int argc, char** argv)
 
         processEditorCommand();
 
-        simple_vertex_shader->view_matrix = camera.getViewMatrix();
-        simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
-        // TICK(draw)
-        texture_pixel_shader->camera_position = camera.position();
-        Chaotirender::drawAndGetScene(w, h, scene_data);
+        // simple_vertex_shader->view_matrix = camera.getViewMatrix();
+        // simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
+        // // TICK(draw)
+        // texture_pixel_shader->camera_position = camera.position();
+        // Chaotirender::drawAndGetScene(w, h, scene_data);
+
+        drawAndGetScene(w, h, scene_data);
         // TOCK(draw)
 
         // TICK(GUI)

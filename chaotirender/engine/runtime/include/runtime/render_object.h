@@ -36,10 +36,9 @@ namespace Chaotirender
     class Mesh
     {
     public:
-        Mesh(RawMesh raw_mesh);
+        Mesh(const RawMesh& raw_mesh);
 
-        void bindDataToPipeline(SampleType tex_sample_type=SampleType::NEAREST);
-        void draw();
+        void draw(SampleType tex_sample_type=SampleType::NEAREST);
         
     public:
         buffer_id vertex_buffer_id {-1};
@@ -60,7 +59,7 @@ namespace Chaotirender
     class RenderObjectInstance
     {
     public:
-        RenderObjectInstance(RenderObjectResource resource);
+        RenderObjectInstance(const RenderObjectResource& resource);
 
     public:
         std::string name;

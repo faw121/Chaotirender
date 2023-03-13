@@ -5,6 +5,8 @@
 #include <runtime/mesh_data.h>
 #include <runtime/render_object.h>
 
+#include <filesystem>
+
 namespace Chaotirender
 {   
     // TODO: should manage resources under folder /asset 
@@ -15,7 +17,7 @@ namespace Chaotirender
 
         uint8_t* loadRawTexture(std::string file, int& w, int&h, int& n);
 
-        RenderObjectResource getObjectResource(std::string asset_path);
+        void getObjectResource(std::string asset_path, RenderObjectResource& resource);
 
     private:
         void getMeshData(RenderObjectResource& object_resource);
@@ -23,6 +25,7 @@ namespace Chaotirender
         
     private:
         tinyobj::ObjReader obj_reader;
+        std::filesystem::path m_asset_folder;
     };
 
     bool loadAsset(std::string asset_path);

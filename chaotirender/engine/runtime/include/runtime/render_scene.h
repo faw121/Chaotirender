@@ -3,7 +3,7 @@
 #include <runtime/camera.h>
 #include <runtime/render_object.h>
 #include <runtime/simple_vertex_shader.h>
-#include <runtime/texture_pixel_shader.h>
+#include <runtime/phong_pixel_shader.h>
 
 #include <vector>
 #include <memory>
@@ -21,12 +21,14 @@ namespace Chaotirender
         void init();
 
     public:
-        Camera camera;
+        Camera m_camera;
 
-        std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
-        std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
+        Light m_light;
 
-        std::vector<RenderObjectInstance> object_list;
+        std::shared_ptr<Chaotirender::SimpleVertexShader> m_simple_vertex_shader {nullptr};
+        std::shared_ptr<Chaotirender::PhongPixelShader> m_phong_pixel_shader {nullptr};
+
+        std::vector<RenderObjectInstance> m_object_list;
     
     public:
         void draw();

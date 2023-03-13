@@ -88,8 +88,10 @@ namespace Chaotirender
     glm::vec4 Texture::getTexel(int i, int j)
     {
         int index = (j * m_width + i) * 4;
-
+        
         int max = m_width * m_height * 4;
+
+        assert(index < max && "texture index out of range!!!");
 
         uint8_t  r = m_texels[index];
         uint8_t  g = m_texels[index + 1];

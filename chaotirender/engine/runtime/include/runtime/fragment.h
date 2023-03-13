@@ -15,6 +15,7 @@ namespace Chaotirender
         glm::vec3    normal;
         glm::vec2    uv;
         glm::vec3    world_position;
+        glm::vec3    light_position; // light space position
         glm::vec3    color;
 
         // std::map<std::string, std::any> varyings;
