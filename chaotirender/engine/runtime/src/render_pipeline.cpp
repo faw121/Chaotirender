@@ -12,12 +12,25 @@ namespace Chaotirender
 
     RenderPipeline::RenderPipeline(int w, int h): frame_buffer(w, h), m_w(w), m_h(h)
     {
+        setScreenMatrix(w, h);
+    }
+
+    void RenderPipeline::setScreenMatrix(int w, int h)
+    {
         m_screen_mapping_matrix[0][0] = w / 2;
         m_screen_mapping_matrix[3][0] = w / 2;
         m_screen_mapping_matrix[1][1] = h / 2;
         m_screen_mapping_matrix[3][1] = h / 2;
         m_screen_mapping_matrix[2][2] = 1;
         m_screen_mapping_matrix[3][3] = 1;
+    }
+
+    void RenderPipeline::setViewPort(int w, int h)
+    {
+        m_w = w;
+        m_h = h;
+        setScreenMatrix(w, h);
+        frame_buffer.resizeAndClear(w, h);
     }
 
     void RenderPipeline::draw()

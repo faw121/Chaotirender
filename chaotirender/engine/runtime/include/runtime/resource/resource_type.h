@@ -33,30 +33,30 @@ namespace Chaotirender
 
     // metallic-roughness structure
     struct MaterialTexData
-    {
-        RawTexture m_base_color_texture;
-        RawTexture m_metallic_texture;
-        RawTexture m_roughness_texture;
-        RawTexture m_normal_texture;
-        RawTexture m_emissive_texture;
-        RawTexture m_occlusion_texture;
+    {   
+        std::shared_ptr<RawTexture> m_base_color_texture;
+        std::shared_ptr<RawTexture> m_metallic_texture;
+        std::shared_ptr<RawTexture> m_roughness_texture;
+        std::shared_ptr<RawTexture> m_normal_texture;
+        std::shared_ptr<RawTexture> m_emissive_texture;
+        std::shared_ptr<RawTexture> m_occlusion_texture;
     };
 
     struct MeshId
     {
-        buffer_id m_vertex_buffer_id;
-        buffer_id m_index_buffer_id;
+        buffer_id m_vertex_buffer_id {-1};
+        buffer_id m_index_buffer_id {-1};
     };
 
     // pbr material structure, phong just use base_color
     struct MaterialTexId
     {
-        buffer_id m_base_color_tex_id;
-        buffer_id m_metallic_tex_id;
-        buffer_id m_roughness_tex_id;
-        buffer_id m_normal_tex_id;
-        buffer_id m_emissive_tex_id;
-        buffer_id m_occlusion_tex_id;
+        buffer_id m_base_color_tex_id {-1};
+        buffer_id m_metallic_tex_id {-1};
+        buffer_id m_roughness_tex_id {-1};
+        buffer_id m_normal_tex_id {-1};
+        buffer_id m_emissive_tex_id {-1};
+        buffer_id m_occlusion_tex_id {-1};
     };
 
     // MeshData, MeshId, and MeshSize(int)
@@ -79,10 +79,10 @@ namespace Chaotirender
 
     struct PhongMaterial
     {   
-        glm::vec3 ka;
-        glm::vec3 kd;
-        glm::vec3 ks;
-        float shininess;
+        glm::vec3 ka {0.4f, 0.4f, 0.4f};
+        glm::vec3 kd {0.7f, 0.7f, 0.7f};
+        glm::vec3 ks {0.3f, 0.3f, 0.3f};
+        float shininess {30.f};
     };
 
     // shading logic:
@@ -90,16 +90,16 @@ namespace Chaotirender
     //          true -> depends on material_type
     struct SubMeshMaterial
     {
-        std::string m_material_type; // TODO: not sure, string or enum?
+        std::string m_material_type {"phong"}; // TODO: not sure, string or enum?
         bool m_use_tex; // if not use, use phong material for shading
         PhongMaterial m_phong_material;
 
-        int m_tex_asset_ind;
+        int m_tex_asset_ind {-1};
     };
 
     struct SubMesh
     {
-        int m_mesh_asset_ind;
+        int m_mesh_asset_ind {-1};
         SubMeshMaterial m_sub_material;
     };
 

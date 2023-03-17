@@ -7,6 +7,8 @@
 #include <runtime/simple_pixel_shader.h>
 #include <runtime/texture_pixel_shader.h>
 
+#include <runtime/resource/asset_manager.h>
+
 #include <runtime/tgaimage.h>
 #include <runtime/debug.h>
 #include <runtime/tick_tock.h>
@@ -15,6 +17,18 @@
 
 namespace Chaotirender
 {  
+    void testAssetManager()
+    {
+        AssetManager asset_manager;
+
+        std::string object_resource_path("asset/");
+
+        asset_manager.fetchObjectResourcesDesc(object_resource_path);
+
+        for (int i = 0; i < 6; i++)
+            asset_manager.loadObjectResource(i);
+    }
+
     void setUp(VertexBuffer& vertex_buffer, IndexBuffer& index_buffer, SimpleVertexShader& simple_vertex_shader, TexturePixelShader& texture_pixel_shader)
     {
         loadAsset("asset/spot/spot_triangulated_good.obj");
@@ -41,33 +55,33 @@ namespace Chaotirender
         texture_pixel_shader.light = light;
     }
 
-   void test()
-	{
-		auto vertex_buffer = std::make_unique<VertexBuffer>();
-		auto index_buffer = std::make_unique<IndexBuffer>();
+    void test()
+    {
+        auto vertex_buffer = std::make_unique<VertexBuffer>();
+        auto index_buffer = std::make_unique<IndexBuffer>();
 
-		auto simple_vertex_shader = std::make_shared<SimpleVertexShader>();
-		auto texture_pixel_shader = std::make_shared<TexturePixelShader>();
+        auto simple_vertex_shader = std::make_shared<SimpleVertexShader>();
+        auto texture_pixel_shader = std::make_shared<TexturePixelShader>();
 
-		setUp(*vertex_buffer, *index_buffer, *simple_vertex_shader, *texture_pixel_shader);
+        setUp(*vertex_buffer, *index_buffer, *simple_vertex_shader, *texture_pixel_shader);
 
-		buffer_id vid = g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
-		g_render_pipeline.bindVertexBuffer(vid);
+        buffer_id vid = g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
+        g_render_pipeline.bindVertexBuffer(vid);
 
-		buffer_id iid = g_render_pipeline.addIndexBuffer(std::move(index_buffer));
-		g_render_pipeline.bindIndexBuffer(iid);
+        buffer_id iid = g_render_pipeline.addIndexBuffer(std::move(index_buffer));
+        g_render_pipeline.bindIndexBuffer(iid);
 
         g_render_pipeline.setVertexShader(simple_vertex_shader);
         g_render_pipeline.setPixelShader(texture_pixel_shader);
 
-		int w, h, n;
-		RenderResource render_resource;
+        int w, h, n;
+        RenderResource render_resource;
         // auto texture = render_resource.loadTexture("asset/spot/spot_texture.png");
         //  texture->m_sample_type = SampleType::BILINEAR;
         // texture_pixel_shader->texture = texture;
-		auto raw = render_resource.loadRawTexture("asset/spot/spot_texture.png", w, h, n);
-		auto id = g_render_pipeline.addTexture(w, h, n, raw);
-		g_render_pipeline.bindPixelShaderTexture(id, "texture", SampleType::BILINEAR);
+        auto raw = render_resource.loadRawTexture("asset/spot/spot_texture.png", w, h, n);
+        auto id = g_render_pipeline.addTexture(w, h, n, raw);
+        g_render_pipeline.bindPixelShaderTexture(id, "texture", SampleType::BILINEAR);
 
         // g_render_pipeline.render_config.rasterize_config.primitive = PrimitiveType::line;
         // g_render_pipeline.render_config.rasterize_config.line_color = Color(255, 255, 255);
@@ -82,7 +96,7 @@ namespace Chaotirender
         TGAImage out(g_render_pipeline.frame_buffer.getWidth(), g_render_pipeline.frame_buffer.getHeight(), 4, (const uint8_t*) g_render_pipeline.frame_buffer.getColorBuffer());
 
         out.write_tga_file("spotnn.tga");
-	}
+    }
 
     void initScene()
     {
