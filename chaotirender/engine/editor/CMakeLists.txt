@@ -25,6 +25,7 @@ add_dependencies(${TARGET_NAME} copy_asset)
 
 target_include_directories(${TARGET_NAME} PUBLIC include)
 
+# target_link_libraries(${TARGET_NAME} PUBLIC glm) # duplicate?
 target_link_libraries(${TARGET_NAME} PUBLIC glad)
 target_link_libraries(${TARGET_NAME} PUBLIC glfw)
 target_link_libraries(${TARGET_NAME} PUBLIC imgui)

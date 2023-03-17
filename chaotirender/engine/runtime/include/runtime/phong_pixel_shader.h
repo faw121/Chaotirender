@@ -18,8 +18,8 @@ namespace Chaotirender
 
         bool m_use_diffuse_texture;
 
-        glm::vec3 m_kd;
-        glm::vec3 m_ks;
+        glm::vec3 m_kd {0.5f, 0.5f, 0.5f};
+        glm::vec3 m_ks {0.8f, 0.8f, 0.8f};
         float m_shininess;
     
     private:

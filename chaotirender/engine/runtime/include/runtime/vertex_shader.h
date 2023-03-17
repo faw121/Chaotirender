@@ -1,6 +1,6 @@
 #pragma once
 
-#include <runtime/mesh_data.h>
+#include <runtime/pipeline_data_type.h>
 #include <runtime/texture.h>
 
 namespace Chaotirender

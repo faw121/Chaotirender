@@ -25,3 +25,7 @@ endif()
 if(NOT TARGET glad)
     include(glad.cmake)
 endif()
+
+if(NOT TARGET json)
+    include(json.cmake)
+endif()
