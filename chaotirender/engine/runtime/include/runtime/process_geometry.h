@@ -3,7 +3,7 @@
 #include <vector>
 #include <glm/mat4x4.hpp>
 
-#include <runtime/mesh_data.h>
+#include <runtime/pipeline_data_type.h>
 #include <runtime/vertex_shader.h>
 #include <runtime/render_pipeline.h>
 

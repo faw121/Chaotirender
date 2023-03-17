@@ -1,6 +1,6 @@
 # pragma once
 
-#include <runtime/mesh_data.h>
+#include <runtime/pipeline_data_type.h>
 #include <runtime/texture.h>
 #include <runtime/frame_buffer.h>
 #include <runtime/buffer_list.h>
@@ -15,12 +15,6 @@
 
 namespace Chaotirender
 {
-    enum class PrimitiveType
-    {
-        line,
-        triangle
-    };
-
     class RasterizeConfig
     {
     public:
@@ -81,6 +75,8 @@ namespace Chaotirender
         void setVertexShader(std::shared_ptr<VertexShader> shader);
         void setPixelShader(std::shared_ptr<PixelShader> shader);
 
+        void setViewPort(int w, int h);
+
         void draw();
 
     public:
@@ -93,6 +89,8 @@ namespace Chaotirender
         void drawWireframeSerial();
         void drawTriangleParallel();
         void drawWireframeParallel();
+
+        void setScreenMatrix(int w, int h);
 
     private:
         VertexBufferList  m_vertex_buffer_list;

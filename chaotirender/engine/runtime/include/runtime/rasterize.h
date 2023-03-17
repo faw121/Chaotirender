@@ -4,7 +4,7 @@
 #include <glm/vec3.hpp>
 
 #include <runtime/fragment.h>
-#include <runtime/mesh_data.h>
+#include <runtime/pipeline_data_type.h>
 #include <runtime/render_pipeline.h>
 
 #include <vector>

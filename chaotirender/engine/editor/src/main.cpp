@@ -2,7 +2,8 @@
 
 #include <runtime/render_pipeline.h>
 #include <runtime/camera.h>
-#include <runtime/render_scene.h>
+#include <runtime/resource/render_object.h>
+// #include <runtime/render_scene.h>
 
 #include <runtime/test.h>
 
@@ -12,20 +13,23 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+
 // TODO: 
 // 1. shader define variables: atrribute, varying, uniform
 // 2. does renderPipeline need to be global?
 // 3. tile based: performance and mipmap
+// 4. ** gamma correction
+// 5. ** refractor folder structure
 
 float m_mouse_x = 0;
 float m_mouse_y = 0;
-// Chaotirender::Camera camera;
+Chaotirender::Camera camera;
 
 std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
 std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
 
-Chaotirender::RenderScene render_scene;
-Chaotirender::Camera& camera = render_scene.m_camera;
+// Chaotirender::RenderScene render_scene;
+// Chaotirender::Camera& camera = render_scene.m_camera;
 
 enum class EditorCommand : unsigned int
 {
@@ -140,35 +144,35 @@ void initClippingScene()
     Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
 }
 
-void initScene(std::string asset_path)
-{   
-    // fetch resource
-    Chaotirender::AssetManager asset_manager;
-    Chaotirender::RenderObjectResource object_resource;
-    asset_manager.getObjectResource(asset_path, object_resource);
+// void initScene(std::string asset_path)
+// {   
+//     // fetch resource
+//     Chaotirender::AssetManager asset_manager;
+//     Chaotirender::RenderObjectResource object_resource;
+//     asset_manager.getObjectResource(asset_path, object_resource);
 
-    object_resource.addDataToPipeline();
+//     object_resource.addDataToPipeline();
 
-    // instantiate
-    // Chaotirender::RenderObjectInstance object_instance(object_resource);
+//     // instantiate
+//     // Chaotirender::RenderObjectInstance object_instance(object_resource);
 
-    // add to scene
-    render_scene.init();
-    render_scene.m_object_list.push_back(Chaotirender::RenderObjectInstance(object_resource));
-}
+//     // add to scene
+//     render_scene.init();
+//     render_scene.m_object_list.push_back(Chaotirender::RenderObjectInstance(object_resource));
+// }
 
-void drawAndGetScene(int& scene_w, int& scene_h, const uint8_t*& data)
-{
-    Chaotirender::g_render_pipeline.frame_buffer.clear();
+// void drawAndGetScene(int& scene_w, int& scene_h, const uint8_t*& data)
+// {
+//     Chaotirender::g_render_pipeline.frame_buffer.clear();
 
-    // Chaotirender::g_render_pipeline.render_config.enable_parallel = false;
+//     // Chaotirender::g_render_pipeline.render_config.enable_parallel = false;
 
-    render_scene.draw();
+//     render_scene.draw();
 
-    scene_w = Chaotirender::g_render_pipeline.frame_buffer.getWidth();
-    scene_h = Chaotirender::g_render_pipeline.frame_buffer.getHeight();
-    data = (const uint8_t*) Chaotirender::g_render_pipeline.frame_buffer.getColorBuffer();
-}
+//     scene_w = Chaotirender::g_render_pipeline.frame_buffer.getWidth();
+//     scene_h = Chaotirender::g_render_pipeline.frame_buffer.getHeight();
+//     data = (const uint8_t*) Chaotirender::g_render_pipeline.frame_buffer.getColorBuffer();
+// }
 
 int main(int argc, char** argv) 
 {   
@@ -186,6 +190,7 @@ int main(int argc, char** argv)
     // 1. wrap window, seperate ui, io
     // 2. load meterial?
     // testLoad();
+    Chaotirender::testAssetManager();
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -251,8 +256,14 @@ int main(int argc, char** argv)
     int w, h;
     const uint8_t* scene_data = nullptr;
 
+    // initScene();
+    // set scene view port
+    Chaotirender::g_render_pipeline.setViewPort(1280, 720);
+    // render_scene.m_camera.setAspect(16.f / 9.f);
+    camera.setAspect(16.f /9.f);
+
+    // initScene("asset/mary/Marry.obj");
     initScene();
-    initScene("asset/mary/Marry.obj");
 
     glGenTextures(1, &scene_tex_id);
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
@@ -279,13 +290,13 @@ int main(int argc, char** argv)
 
         processEditorCommand();
 
-        // simple_vertex_shader->view_matrix = camera.getViewMatrix();
-        // simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
+        simple_vertex_shader->view_matrix = camera.getViewMatrix();
+        simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
         // // TICK(draw)
-        // texture_pixel_shader->camera_position = camera.position();
-        // Chaotirender::drawAndGetScene(w, h, scene_data);
+        texture_pixel_shader->camera_position = camera.position();
+        Chaotirender::drawAndGetScene(w, h, scene_data);
 
-        drawAndGetScene(w, h, scene_data);
+        // drawAndGetScene(w, h, scene_data);
         // TOCK(draw)
 
         // TICK(GUI)
@@ -295,8 +306,8 @@ int main(int argc, char** argv)
         ImGui::NewFrame();
 
         // // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        // if (show_demo_window)
-            // ImGui::ShowDemoWindow(&show_demo_window);
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
