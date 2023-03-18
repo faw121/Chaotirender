@@ -1,5 +1,6 @@
 #include <runtime/resource/asset_manager.h>
 #include <runtime/util/json.h>
+#include <runtime/pipeline/render_pipeline.h>
 
 #include <stb_image.h>
 
@@ -23,6 +24,7 @@ namespace Chaotirender
 
                 RenderObjectResource obj_resource;
                 obj_resource.m_path = file_item.path().string();
+                obj_resource.m_name = file_item.path().filename().string();
 
                 // find .obj and .material.json file
                 bool find_obj = false;
@@ -292,5 +294,75 @@ namespace Chaotirender
         // log
         std::cout << tex_file + ": " << "w:" << w << " h:" << h << " n:" << n << std::endl;
         return texels;
+    }
+
+    void AssetManager::addMeshDataToPipeline(int asset_ind)
+    {
+        if (asset_ind < 0 || asset_ind >= m_mesh_asset_list.size())
+        {
+            std::cout << "-- mesh asset index out of range\n";
+            return;
+        }
+
+        buffer_id v_id = g_render_pipeline.addVertexBuffer(*(m_mesh_asset_list[asset_ind].m_mesh_data.m_vertex_buffer));
+        buffer_id i_id = g_render_pipeline.addIndexBuffer(*(m_mesh_asset_list[asset_ind].m_mesh_data.m_index_buffer));
+
+        m_mesh_asset_list[asset_ind].m_mesh_id.m_vertex_buffer_id = v_id;
+        m_mesh_asset_list[asset_ind].m_mesh_id.m_index_buffer_id = i_id;
+    }
+
+    void AssetManager::addMaterialDataToPipeline(int asset_ind)
+    {
+        if (asset_ind < 0 || asset_ind >= m_tex_asset_list.size())
+        {
+            std::cout << "-- mesh asset index out of range\n";
+            return;
+        }
+        MaterialTexId& tex_id =  m_tex_asset_list[asset_ind].m_material_tex_id;
+        MaterialTexData& tex_data =  m_tex_asset_list[asset_ind].m_material_tex_data;
+        if (tex_data.m_base_color_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_base_color_texture->m_width, tex_data.m_base_color_texture->m_height, tex_data.m_base_color_texture->m_channels, 
+                tex_data.m_base_color_texture->m_texels);
+            tex_id.m_base_color_tex_id = id;
+        }
+        if (tex_data.m_metallic_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_metallic_texture->m_width, tex_data.m_metallic_texture->m_height, tex_data.m_metallic_texture->m_channels, 
+                tex_data.m_metallic_texture->m_texels);
+            tex_id.m_metallic_tex_id = id;
+        }
+            
+        if (tex_data.m_roughness_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_roughness_texture->m_width, tex_data.m_roughness_texture->m_height, tex_data.m_roughness_texture->m_channels, 
+                tex_data.m_roughness_texture->m_texels);
+            tex_id.m_roughness_tex_id = id;
+        }
+            
+        if (tex_data.m_normal_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_normal_texture->m_width, tex_data.m_normal_texture->m_height, tex_data.m_normal_texture->m_channels, 
+                tex_data.m_normal_texture->m_texels);
+            tex_id.m_normal_tex_id = id;
+        }
+        if (tex_data.m_occlusion_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_occlusion_texture->m_width, tex_data.m_occlusion_texture->m_height, tex_data.m_occlusion_texture->m_channels, 
+                tex_data.m_occlusion_texture->m_texels);
+            tex_id.m_occlusion_tex_id = id;
+        }
+        if (tex_data.m_emissive_texture != nullptr)
+        {
+            buffer_id id = g_render_pipeline.addTexture(
+                tex_data.m_emissive_texture->m_width, tex_data.m_emissive_texture->m_height, tex_data.m_emissive_texture->m_channels, 
+                tex_data.m_emissive_texture->m_texels);
+            tex_id.m_emissive_tex_id = id;
+        }
     }
 }

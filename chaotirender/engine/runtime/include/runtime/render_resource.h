@@ -1,6 +1,6 @@
 #pragma once
 
-#include <runtime/texture.h>
+#include <runtime/pipeline/data_type/texture.h>
 
 #include <memory>
 

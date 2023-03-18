@@ -19,7 +19,14 @@ namespace Chaotirender
         void loadMesh(RenderObjectResource& obj_res);
         void loadMaterialTexture(RenderObjectResource& obj_res);
         uint8_t* loadRawTexture(std::string tex_file, int& w, int&h, int& n);
-        
+
+        void addMeshDataToPipeline(int asset_ind);
+        void addMaterialDataToPipeline(int asset_ind);
+    
+    public:
+        // object resources
+        std::vector<RenderObjectResource> m_object_resource_list;  
+
     private:
         // directorys
         std::string m_object_resource_dir;
@@ -27,9 +34,6 @@ namespace Chaotirender
         // assets
         std::vector<MeshAsset> m_mesh_asset_list;
         std::vector<MaterialTexAsset> m_tex_asset_list;
-
-        // object resources
-        std::vector<RenderObjectResource> m_object_resource_list;
 
         // loader
         tinyobj::ObjReader obj_reader;

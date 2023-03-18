@@ -1,6 +1,6 @@
 #pragma once
 
-#include <runtime/pipeline_data_type.h>
+#include <runtime/pipeline/data_type/pipeline_data_type.h>
 
 #include <runtime/util/json.h>
 

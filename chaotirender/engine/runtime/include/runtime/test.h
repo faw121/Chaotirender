@@ -1,15 +1,15 @@
 #pragma once
 
-#include <runtime/render_pipeline.h>
+#include <runtime/pipeline/render_pipeline.h>
 #include <runtime/asset_manager.h>
 #include <runtime/render_resource.h>
-#include <runtime/simple_vertex_shader.h>
-#include <runtime/simple_pixel_shader.h>
-#include <runtime/texture_pixel_shader.h>
+#include <runtime/shader/simple_vertex_shader.h>
+#include <runtime/shader/simple_pixel_shader.h>
+#include <runtime/shader/texture_pixel_shader.h>
 
 #include <runtime/resource/asset_manager.h>
 
-#include <runtime/tgaimage.h>
+#include <runtime/util/tgaimage.h>
 #include <runtime/debug.h>
 #include <runtime/tick_tock.h>
 

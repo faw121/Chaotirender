@@ -13,12 +13,17 @@ namespace Chaotirender
     {
     public:
         std::string m_path;
+        std::string m_name;
         // source file desc
         MeshSourceDesc m_mesh_source_desc;
         MaterialSourceDesc m_material_source_desc;
 
         // sub-mesh data
         std::vector<SubMesh> m_sub_mesh;
+
+        bool m_loaded {false};
+
+        unsigned int m_instance_count {0};
     };
 
     struct Transform
@@ -31,16 +36,18 @@ namespace Chaotirender
     class RenderObjectInstance
     {
     public:
-        RenderObjectInstance(const RenderObjectResource& resource);
+        RenderObjectInstance(const RenderObjectResource& resource, std::string name);
 
     public:
         std::string m_name;
 
         Transform m_transform;
 
+        bool m_draw {true};
+
         PrimitiveType m_primitive_type {PrimitiveType::triangle};
 
-        bool m_use_tex {true};
+        // bool m_use_tex {true};
 
         std::vector<SubMesh> m_sub_mesh;
     };

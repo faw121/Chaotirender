@@ -2,7 +2,7 @@
 
 #include <tiny_obj_loader.h>
 
-#include <runtime/pipeline_data_type.h>
+#include <runtime/pipeline/data_type/pipeline_data_type.h>
 
 #include <filesystem>
 

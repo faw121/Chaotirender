@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <runtime/render_pipeline.h>
-#include <runtime/camera.h>
+#include <runtime/pipeline/render_pipeline.h>
+#include <runtime/render/camera.h>
 #include <runtime/resource/render_object.h>
 // #include <runtime/render_scene.h>
 
