@@ -14,7 +14,8 @@ namespace Chaotirender
     {
     public:
         void fetchObjectResourcesDesc(std::string object_resource_path);
-        void loadObjectResource(int index);
+        bool loadObjectResource(int res_index);
+        void addObjectResourceToPipeline(int res_index);
 
         void loadMesh(RenderObjectResource& obj_res);
         void loadMaterialTexture(RenderObjectResource& obj_res);
@@ -22,6 +23,8 @@ namespace Chaotirender
 
         void addMeshDataToPipeline(int asset_ind);
         void addMaterialDataToPipeline(int asset_ind);
+
+        void createObjectInstance(int res_index, RenderObjectInstance& obj_instance);
     
     public:
         // object resources

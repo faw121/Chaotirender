@@ -75,21 +75,37 @@ namespace Chaotirender
         }
     }
 
-    void AssetManager::loadObjectResource(int index)
+    void AssetManager::createObjectInstance(int res_index, RenderObjectInstance& obj_instance)
+    {
+        for (auto& mesh: m_object_resource_list[res_index].m_sub_mesh)
+        {
+            InstanceSubMesh instance_mesh;
+
+            instance_mesh.m_mesh_id = m_mesh_asset_list[mesh.m_mesh_asset_ind].m_mesh_id;
+            instance_mesh.m_mesh_size = m_mesh_asset_list[mesh.m_mesh_asset_ind].m_mesh_size;
+
+            instance_mesh.m_tex_id = m_tex_asset_list[mesh.m_tex_asset_ind].m_material_tex_id;
+            instance_mesh.m_sub_material = mesh.m_sub_material;
+
+            obj_instance.m_sub_mesh.push_back(instance_mesh);
+        }
+    }
+
+    bool AssetManager::loadObjectResource(int res_index)
     {   
-        if (index < 0 || index >= m_object_resource_list.size())
+        if (res_index < 0 || res_index >= m_object_resource_list.size())
         {
             std::cout << "-- object resource index out of range" << std::endl;
-            return;
+            return false;
         }
         
-        auto& obj_res = m_object_resource_list[index];
+        auto& obj_res = m_object_resource_list[res_index];
 
         // has mesh
         if (obj_res.m_mesh_source_desc.m_mesh_file.empty())
         {
             std::cout << "-- object resource has no mesh" << std::endl;
-            return;
+            return false;
         }
 
         // load mesh, if use .mtl, this process will load texture as well
@@ -100,6 +116,10 @@ namespace Chaotirender
         // if use .material.json, load texture
         if (use_json_has_tex)
             loadMaterialTexture(obj_res);
+        
+        obj_res.m_loaded = true;
+        
+        return true;
     }
 
     void AssetManager::loadMesh(RenderObjectResource& obj_res)
@@ -211,12 +231,12 @@ namespace Chaotirender
                     m_tex_asset_list.back().m_material_tex_data.m_base_color_texture = base_color_tex;
 
                     sub_mesh.m_sub_material.m_use_tex = true;
-                    sub_mesh.m_sub_material.m_tex_asset_ind = m_tex_asset_list.size() - 1;
+                    sub_mesh.m_tex_asset_ind = m_tex_asset_list.size() - 1;
                 }
             }
             // mesh size
-            mesh_asset.num_vertices = mesh_asset.m_mesh_data.m_vertex_buffer->size();
-            mesh_asset.num_triangles = mesh_asset.m_mesh_data.m_index_buffer->size() / 3;
+            mesh_asset.m_mesh_size.m_num_vertices = mesh_asset.m_mesh_data.m_vertex_buffer->size();
+            mesh_asset.m_mesh_size.m_num_triangles = mesh_asset.m_mesh_data.m_index_buffer->size() / 3;
 
             // add to asset list
             m_mesh_asset_list.push_back(mesh_asset);
@@ -277,7 +297,7 @@ namespace Chaotirender
 
             material_asset.m_material_tex_data.m_emissive_texture = tex;
         }
-        obj_res.m_sub_mesh[0].m_sub_material.m_tex_asset_ind = m_tex_asset_list.size() - 1;
+        obj_res.m_sub_mesh[0].m_tex_asset_ind = m_tex_asset_list.size() - 1;
     }
 
     uint8_t* AssetManager::loadRawTexture(std::string tex_file, int& w, int& h, int& n)
@@ -294,6 +314,22 @@ namespace Chaotirender
         // log
         std::cout << tex_file + ": " << "w:" << w << " h:" << h << " n:" << n << std::endl;
         return texels;
+    }
+
+    void AssetManager::addObjectResourceToPipeline(int res_index)
+    {
+        auto& obj_res = m_object_resource_list[res_index];
+        if (!obj_res.m_loaded)
+        {
+            std::cout << "object resource not loaded yet!\n";
+            return;
+        }
+
+        for (auto& submesh: obj_res.m_sub_mesh)
+        {   
+            addMeshDataToPipeline(submesh.m_mesh_asset_ind);
+            addMaterialDataToPipeline(submesh.m_tex_asset_ind);
+        }
     }
 
     void AssetManager::addMeshDataToPipeline(int asset_ind)

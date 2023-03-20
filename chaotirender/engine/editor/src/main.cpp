@@ -3,7 +3,8 @@
 #include <runtime/pipeline/render_pipeline.h>
 #include <runtime/render/camera.h>
 #include <runtime/resource/render_object.h>
-// #include <runtime/render_scene.h>
+#include <runtime/engine.h>
+#include <runtime/global/engine_global_context.h>
 
 #include <runtime/test.h>
 
@@ -23,13 +24,14 @@
 
 float m_mouse_x = 0;
 float m_mouse_y = 0;
-Chaotirender::Camera camera;
+// Chaotirender::Camera camera;
+// Chaotirender::Camera old_camera;
 
 std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
 std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
 
-// Chaotirender::RenderScene render_scene;
-// Chaotirender::Camera& camera = render_scene.m_camera;
+Chaotirender::ChaotirenderEngine engine;
+Chaotirender::Camera& camera = engine.m_render_system->m_camera;
 
 enum class EditorCommand : unsigned int
 {
@@ -190,7 +192,12 @@ int main(int argc, char** argv)
     // 1. wrap window, seperate ui, io
     // 2. load meterial?
     // testLoad();
-    Chaotirender::testAssetManager();
+    // Chaotirender::testAssetManager();
+
+    // Chaotirender::ChaotirenderEngine engine;
+    // engine.init();
+    engine.run();
+    // camera = engine.m_render_system->m_camera;
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -290,11 +297,17 @@ int main(int argc, char** argv)
 
         processEditorCommand();
 
-        simple_vertex_shader->view_matrix = camera.getViewMatrix();
-        simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
-        // // TICK(draw)
-        texture_pixel_shader->camera_position = camera.position();
-        Chaotirender::drawAndGetScene(w, h, scene_data);
+        // simple_vertex_shader->view_matrix = camera.getViewMatrix();
+        // simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
+        // // // // TICK(draw)
+        // texture_pixel_shader->camera_position = camera.position();
+        // Chaotirender::drawAndGetScene(w, h, scene_data);
+
+        engine.m_render_system->swapRenderData();
+
+        // TICK(outdraw)
+        engine.m_render_system->drawOneFrame(w, h, scene_data);
+        // TOCK(outdraw)
 
         // drawAndGetScene(w, h, scene_data);
         // TOCK(draw)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <runtime/pipeline/data_type/pipeline_data_type.h>
+#include <runtime/pipeline/data_type/texture.h>
 
 #include <runtime/util/json.h>
 
@@ -59,15 +60,19 @@ namespace Chaotirender
         buffer_id m_occlusion_tex_id {-1};
     };
 
+    struct MeshSize
+    {
+        int m_num_vertices {0};
+        int m_num_triangles {0};
+    };
+
     // MeshData, MeshId, and MeshSize(int)
     struct MeshAsset
     {
         MeshData m_mesh_data;
         MeshId   m_mesh_id;
 
-        // desc
-        int num_vertices {0};
-        int num_triangles {0};
+        MeshSize m_mesh_size;
     };
 
     // MaterialTexData, MaterialTexId
@@ -82,7 +87,7 @@ namespace Chaotirender
         glm::vec3 ka {0.4f, 0.4f, 0.4f};
         glm::vec3 kd {0.7f, 0.7f, 0.7f};
         glm::vec3 ks {0.3f, 0.3f, 0.3f};
-        float shininess {30.f};
+        float shininess {50.f};
     };
 
     // shading logic:
@@ -92,14 +97,25 @@ namespace Chaotirender
     {
         std::string m_material_type {"phong"}; // TODO: not sure, string or enum?
         bool m_use_tex; // if not use, use phong material for shading
+        SampleType m_sample_type {SampleType::NEAREST};
         PhongMaterial m_phong_material;
-
-        int m_tex_asset_ind {-1};
     };
 
     struct SubMesh
     {
         int m_mesh_asset_ind {-1};
+        int m_tex_asset_ind {-1};
+
+        SubMeshMaterial m_sub_material;
+    };
+
+    struct InstanceSubMesh
+    {
+        MeshId m_mesh_id;
+
+        MeshSize m_mesh_size;
+
+        MaterialTexId m_tex_id;
         SubMeshMaterial m_sub_material;
     };
 

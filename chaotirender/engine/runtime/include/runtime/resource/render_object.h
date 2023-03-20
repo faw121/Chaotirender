@@ -36,9 +36,6 @@ namespace Chaotirender
     class RenderObjectInstance
     {
     public:
-        RenderObjectInstance(const RenderObjectResource& resource, std::string name);
-
-    public:
         std::string m_name;
 
         Transform m_transform;
@@ -49,6 +46,6 @@ namespace Chaotirender
 
         // bool m_use_tex {true};
 
-        std::vector<SubMesh> m_sub_mesh;
+        std::vector<InstanceSubMesh> m_sub_mesh;
     };
 };

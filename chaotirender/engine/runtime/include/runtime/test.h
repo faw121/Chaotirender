@@ -137,7 +137,7 @@ namespace Chaotirender
         // g_render_pipeline.render_config.rasterize_config.primitive = PrimitiveType::line;
         // g_render_pipeline.render_config.rasterize_config.line_color = Color(255, 255, 255);
 
-        g_render_pipeline.draw();        
+        g_render_pipeline.draw();     
 
         scene_w = g_render_pipeline.frame_buffer.getWidth();
         scene_h = g_render_pipeline.frame_buffer.getHeight();
