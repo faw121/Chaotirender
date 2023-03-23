@@ -9,6 +9,7 @@
 #include <runtime/test.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <backends/imgui_impl_glfw.h>
@@ -146,35 +147,92 @@ void initClippingScene()
     Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
 }
 
-// void initScene(std::string asset_path)
-// {   
-//     // fetch resource
-//     Chaotirender::AssetManager asset_manager;
-//     Chaotirender::RenderObjectResource object_resource;
-//     asset_manager.getObjectResource(asset_path, object_resource);
+void showEditorMenu()
+{   
+    bool enable_parallel = true;
+    bool draw_triangle = true;
+    bool draw_line = false;
+    bool back_face_culling = true;
 
-//     object_resource.addDataToPipeline();
+    ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
+    ImGuiWindowFlags   window_flags = ImGuiWindowFlags_NoTitleBar |
+                                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+                                ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-//     // instantiate
-//     // Chaotirender::RenderObjectInstance object_instance(object_resource);
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);
+    // std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();
+    ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_Always);
 
-//     // add to scene
-//     render_scene.init();
-//     render_scene.m_object_list.push_back(Chaotirender::RenderObjectInstance(object_resource));
-// }
+    ImGui::SetNextWindowViewport(main_viewport->ID);
 
-// void drawAndGetScene(int& scene_w, int& scene_h, const uint8_t*& data)
-// {
-//     Chaotirender::g_render_pipeline.frame_buffer.clear();
+    ImGui::Begin("Editor menu", NULL, window_flags);
 
-//     // Chaotirender::g_render_pipeline.render_config.enable_parallel = false;
+    ImGuiID main_docking_id = ImGui::GetID("Main Docking");
+    if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
+    {
+        ImGui::DockBuilderRemoveNode(main_docking_id);
 
-//     render_scene.draw();
+        ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
+        ImGui::DockBuilderSetNodePos(main_docking_id,
+                                        ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
+        ImGui::DockBuilderSetNodeSize(main_docking_id,
+                                        ImVec2(1920.f, 1080.f - 18.0f));
 
-//     scene_w = Chaotirender::g_render_pipeline.frame_buffer.getWidth();
-//     scene_h = Chaotirender::g_render_pipeline.frame_buffer.getHeight();
-//     data = (const uint8_t*) Chaotirender::g_render_pipeline.frame_buffer.getColorBuffer();
-// }
+        ImGuiID center = main_docking_id;
+        ImGuiID left;
+        ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.25f, nullptr, &left);
+
+        ImGuiID left_other;
+        ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
+
+        ImGuiID left_game_engine;
+        ImGuiID left_asset =
+            ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.30f, nullptr, &left_game_engine);
+
+        ImGui::DockBuilderDockWindow("World Objects", left_asset);
+        ImGui::DockBuilderDockWindow("Components Details", right);
+        ImGui::DockBuilderDockWindow("File Content", left_file_content);
+        ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
+
+        ImGui::DockBuilderFinish(main_docking_id);
+    }
+
+    ImGui::DockSpace(main_docking_id);
+
+    if (ImGui::BeginMainMenuBar())
+    {   
+        if (ImGui::BeginMenu("Render"))
+        {   
+            if (ImGui::MenuItem("parallel", NULL, enable_parallel))
+                enable_parallel = !enable_parallel;
+
+            if (ImGui::BeginMenu("primitive"))
+            {   
+                if (ImGui::MenuItem("triangle", NULL, draw_triangle))
+                {   
+                    draw_triangle = !draw_triangle;
+                    draw_line = !draw_line;
+                }
+
+                if (ImGui::MenuItem("line", NULL, draw_line))
+                {   
+                    draw_triangle = !draw_triangle;
+                    draw_line = !draw_line;
+                } 
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::MenuItem("backe face culling", NULL, back_face_culling))
+                back_face_culling = !back_face_culling;
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+    ImGui::End();
+}
 
 int main(int argc, char** argv) 
 {   
@@ -229,13 +287,28 @@ int main(int argc, char** argv)
      // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-    //io.ConfigViewportsNoAutoMerge = true;
-    //io.ConfigViewportsNoTaskBarIcon = true;
+    // ImGuiIO& io = ImGui::GetIO(); (void)io;
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    // //io.ConfigViewportsNoAutoMerge = true;
+    // //io.ConfigViewportsNoTaskBarIcon = true;
+
+
+     // set ui content scale
+    float x_scale, y_scale;
+    glfwGetWindowContentScale(window, &x_scale, &y_scale);
+    float content_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
+    
+    // load font for imgui
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigDockingAlwaysTabBar         = true;
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
+    io.Fonts->AddFontFromFileTTF(
+        "resource/editorFont.TTF", content_scale * 16, nullptr, nullptr);
+    io.Fonts->Build();
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -285,6 +358,12 @@ int main(int argc, char** argv)
     // glBindTexture(GL_TEXTURE_2D, scene_tex_id);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
 
+    bool enable_parallel = true;
+    bool draw_triangle = true;
+    bool draw_line = false;
+    bool back_face_culling = true;
+    Chaotirender::PrimitiveType primitive = Chaotirender::PrimitiveType::triangle;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -306,6 +385,11 @@ int main(int argc, char** argv)
         engine.m_render_system->swapRenderData();
 
         // TICK(outdraw)
+        Chaotirender::g_render_pipeline.render_config.enable_parallel = enable_parallel;
+        Chaotirender::g_render_pipeline.render_config.rasterize_config.back_face_culling = back_face_culling;
+        Chaotirender::g_render_pipeline.render_config.rasterize_config.primitive = primitive;
+        Chaotirender::g_render_pipeline.render_config.rasterize_config.line_color = Chaotirender::Color(255, 255, 255);
+
         engine.m_render_system->drawOneFrame(w, h, scene_data);
         // TOCK(outdraw)
 
@@ -318,14 +402,94 @@ int main(int argc, char** argv)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
+        ImGuiWindowFlags   window_flags = ImGuiWindowFlags_NoTitleBar |
+                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+                                    ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);
+        // std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();
+        ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_Always);
+
+        ImGui::SetNextWindowViewport(main_viewport->ID);
+
+        ImGui::Begin("Editor menu", NULL, window_flags);
+
+        ImGuiID main_docking_id = ImGui::GetID("Main Docking");
+        if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
+        {
+            ImGui::DockBuilderRemoveNode(main_docking_id);
+
+            ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
+            ImGui::DockBuilderSetNodePos(main_docking_id,
+                                         ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
+            ImGui::DockBuilderSetNodeSize(main_docking_id,
+                                          ImVec2(1920.f, 1080.f - 18.0f));
+
+            ImGuiID center = main_docking_id;
+            ImGuiID left;
+            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.25f, nullptr, &left);
+
+            ImGuiID left_other;
+            ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
+
+            ImGuiID left_game_engine;
+            ImGuiID left_asset =
+                ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.30f, nullptr, &left_game_engine);
+
+            ImGui::DockBuilderDockWindow("World Objects", left_asset);
+            ImGui::DockBuilderDockWindow("Components Details", right);
+            ImGui::DockBuilderDockWindow("File Content", left_file_content);
+            ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
+
+            ImGui::DockBuilderFinish(main_docking_id);
+        }
+
+        ImGui::DockSpace(main_docking_id);
+
+        if (ImGui::BeginMainMenuBar())
+        {   
+            if (ImGui::BeginMenu("Render"))
+            {   
+                if (ImGui::MenuItem("parallel", NULL, enable_parallel))
+                    enable_parallel = !enable_parallel;
+
+                if (ImGui::BeginMenu("primitive"))
+                {   
+                    if (ImGui::MenuItem("triangle", NULL, draw_triangle))
+                    {   
+                        draw_triangle = !draw_triangle;
+                        draw_line = !draw_line;
+                        primitive = Chaotirender::PrimitiveType::triangle;
+                    }
+
+                    if (ImGui::MenuItem("line", NULL, draw_line))
+                    {   
+                        draw_triangle = !draw_triangle;
+                        draw_line = !draw_line;
+                        primitive = Chaotirender::PrimitiveType::line;
+                    } 
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::MenuItem("backe face culling", NULL, back_face_culling))
+                    back_face_culling = !back_face_culling;
+
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        ImGui::End();
+
         // // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        // if (show_demo_window)
+        //     ImGui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-            
             
             glBindTexture(GL_TEXTURE_2D, scene_tex_id);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);

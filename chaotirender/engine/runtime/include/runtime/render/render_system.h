@@ -28,6 +28,10 @@ namespace Chaotirender
         void drawCameraPass();
 
     public:
+        bool m_enable_parallel {true};
+        bool m_back_face_culling {true};
+        bool m_wireframe {false};
+        
         Camera m_camera;
         RenderScene m_render_scene;
 

@@ -11,6 +11,13 @@ add_custom_target(copy_asset
 
 add_dependencies(${TARGET_NAME} copy_asset)
 
+add_custom_target(remove_resource
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/resource VERBATIM)
+add_custom_target(copy_resource
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/resource DEPENDS remove_resource VERBATIM)
+
+add_dependencies(${TARGET_NAME} copy_resource)
+
 # if(${CMAKE_BUILD_TYPE} MATCHES Release)
 #     message(STATUS ${CMAKE_BUILD_TYPE})
 #     message(STATUS $<TARGET_FILE_DIR:target>)

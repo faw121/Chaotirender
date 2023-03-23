@@ -105,7 +105,6 @@ namespace Chaotirender
         phong_pixel_shader->m_point_light = m_render_scene.m_point_light;
 
         // TOCK(prepare)
-        int draw_count = 0;
         for (auto& mesh: m_render_scene.m_render_mesh_list)
         {   
             // TICK(attributes)
