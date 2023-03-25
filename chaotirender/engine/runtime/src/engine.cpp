@@ -36,7 +36,7 @@ namespace Chaotirender
         m_asset_manager->fetchObjectResourcesDesc("asset/");
 
         m_scene_manager->m_selected_obj_res_ind = 5;
-        m_scene_manager->addObjectInstance();
+        m_scene_manager->addObjectInstance(5, m_scene_manager->getNextObjInstanceName(4));
 
         // m_render_system->swapRenderData();
         // m_render_system->render();

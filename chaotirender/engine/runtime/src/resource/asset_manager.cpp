@@ -84,7 +84,9 @@ namespace Chaotirender
             instance_mesh.m_mesh_id = m_mesh_asset_list[mesh.m_mesh_asset_ind].m_mesh_id;
             instance_mesh.m_mesh_size = m_mesh_asset_list[mesh.m_mesh_asset_ind].m_mesh_size;
 
-            instance_mesh.m_tex_id = m_tex_asset_list[mesh.m_tex_asset_ind].m_material_tex_id;
+            if (mesh.m_tex_asset_ind > -1) // if has texture
+                instance_mesh.m_tex_id = m_tex_asset_list[mesh.m_tex_asset_ind].m_material_tex_id;
+
             instance_mesh.m_sub_material = mesh.m_sub_material;
 
             obj_instance.m_sub_mesh.push_back(instance_mesh);
@@ -138,7 +140,7 @@ namespace Chaotirender
         {
             if (!obj_reader.Error().empty())  
             {   
-                std::cout << "failed to load obj file\n";
+                std::cout << "failed to load obj file" << std::endl;
                 std::cout << "TinyObjReader: " << obj_reader.Error();
             }
             return;
@@ -321,7 +323,7 @@ namespace Chaotirender
         auto& obj_res = m_object_resource_list[res_index];
         if (!obj_res.m_loaded)
         {
-            std::cout << "object resource not loaded yet!\n";
+            std::cout << "object resource not loaded yet!" << std::endl;
             return;
         }
 
@@ -336,7 +338,7 @@ namespace Chaotirender
     {
         if (asset_ind < 0 || asset_ind >= m_mesh_asset_list.size())
         {
-            std::cout << "-- mesh asset index out of range\n";
+            std::cout << "-- mesh asset index out of range" << std::endl;
             return;
         }
 
@@ -351,7 +353,7 @@ namespace Chaotirender
     {
         if (asset_ind < 0 || asset_ind >= m_tex_asset_list.size())
         {
-            std::cout << "-- mesh asset index out of range\n";
+            std::cout << "-- mesh asset index out of range" << std::endl;
             return;
         }
         MaterialTexId& tex_id =  m_tex_asset_list[asset_ind].m_material_tex_id;

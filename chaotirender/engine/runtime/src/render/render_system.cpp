@@ -8,6 +8,7 @@
 #include <glm/mat4x4.hpp>
 
 #include <runtime/tick_tock.h>
+#include <runtime/debug.h>
 
 namespace Chaotirender
 {
@@ -32,28 +33,31 @@ namespace Chaotirender
         // fetch object instances that need to draw
         for (auto& obj: g_engine_global_context.m_scene_manager->m_object_instance_list)
         {   
-            // model matrix
-            // TODO: rotate
-            glm::mat4x4 model_mat(1.f);
-            glm::translate(model_mat, obj.m_transform.translation);
-            glm::scale(model_mat, obj.m_transform.scale);
-
-            for (auto& mesh: obj.m_sub_mesh)
+            if (obj.m_draw)
             {
-                RenderMesh render_mesh;
+                // model matrix
+                // TODO: rotate
+                glm::mat4x4 model_mat(1.f);
+                model_mat = glm::translate(model_mat, obj.m_transform.translation);
+                model_mat = glm::scale(model_mat, obj.m_transform.scale);
 
-                render_mesh.m_model_mat = model_mat;
+                for (auto& mesh: obj.m_sub_mesh)
+                {
+                    RenderMesh render_mesh;
 
-                render_mesh.m_index_buffer_id = mesh.m_mesh_id.m_index_buffer_id;
-                render_mesh.m_vertex_buffer_id = mesh.m_mesh_id.m_vertex_buffer_id;
+                    render_mesh.m_model_mat = model_mat;
 
-                render_mesh.m_material_type = mesh.m_sub_material.m_material_type;
-                render_mesh.m_primitive_type = obj.m_primitive_type;
-                render_mesh.m_use_tex = mesh.m_sub_material.m_use_tex;
-                render_mesh.m_phong_material = mesh.m_sub_material.m_phong_material;
-                render_mesh.m_material_tex_id = mesh.m_tex_id;
+                    render_mesh.m_index_buffer_id = mesh.m_mesh_id.m_index_buffer_id;
+                    render_mesh.m_vertex_buffer_id = mesh.m_mesh_id.m_vertex_buffer_id;
 
-                m_render_scene.m_render_mesh_list.push_back(render_mesh);
+                    render_mesh.m_material_type = mesh.m_sub_material.m_material_type;
+                    render_mesh.m_primitive_type = obj.m_primitive_type;
+                    render_mesh.m_use_tex = mesh.m_sub_material.m_use_tex;
+                    render_mesh.m_phong_material = mesh.m_sub_material.m_phong_material;
+                    render_mesh.m_material_tex_id = mesh.m_tex_id;
+
+                    m_render_scene.m_render_mesh_list.push_back(render_mesh);
+                }
             }
         }
     }
@@ -107,6 +111,9 @@ namespace Chaotirender
         // TOCK(prepare)
         for (auto& mesh: m_render_scene.m_render_mesh_list)
         {   
+            // model matrix
+            simple_vertex_shader->model_matrix = mesh.m_model_mat;
+
             // TICK(attributes)
             // bind mesh data
             g_render_pipeline.bindIndexBuffer(mesh.m_index_buffer_id);
@@ -118,16 +125,19 @@ namespace Chaotirender
             phong_pixel_shader->m_ks = mesh.m_phong_material.ks;
             phong_pixel_shader->m_shininess = mesh.m_phong_material.shininess;
 
+            phong_pixel_shader->m_use_diffuse_texture = false;
             // use tex
             if (mesh.m_use_tex)
             {   
                 phong_pixel_shader->m_use_diffuse_texture = true;
+                g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", SampleType::BILINEAR);
             }
 
-            g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", SampleType::BILINEAR);
+            // g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", SampleType::BILINEAR);
             // TOCK(attributes)
 
             // TICK(draw)
+            // g_render_pipeline.render_config.enable_parallel = false;
             g_render_pipeline.draw();
             // TOCK(draw)
         }

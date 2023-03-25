@@ -10,7 +10,8 @@ namespace Chaotirender
     class SceneManager
     {
     public:
-        void addObjectInstance();
+        void addObjectInstance(int ind, std::string name);
+        std::string getNextObjInstanceName(int ind);
 
     public:
         std::vector<RenderObjectInstance> m_object_instance_list;

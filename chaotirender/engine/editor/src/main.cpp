@@ -155,15 +155,20 @@ void showEditorMenu()
     bool back_face_culling = true;
 
     ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
+    // ImGuiWindowFlags   window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar |
+    //                             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+    //                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+    //                             ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
+                    
     ImGuiWindowFlags   window_flags = ImGuiWindowFlags_NoTitleBar |
                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+                                ImGuiWindowFlags_NoMove |
                                 ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);
     // std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();
-    ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(1920.f, 1080.f), ImGuiCond_Always);
 
     ImGui::SetNextWindowViewport(main_viewport->ID);
 
@@ -193,8 +198,8 @@ void showEditorMenu()
 
         ImGui::DockBuilderDockWindow("World Objects", left_asset);
         ImGui::DockBuilderDockWindow("Components Details", right);
-        ImGui::DockBuilderDockWindow("File Content", left_file_content);
-        ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
+        ImGui::DockBuilderDockWindow("Render Resource", left_file_content);
+        ImGui::DockBuilderDockWindow("Render Scene", left_game_engine);
 
         ImGui::DockBuilderFinish(main_docking_id);
     }
@@ -229,8 +234,232 @@ void showEditorMenu()
 
             ImGui::EndMenu();
         }
-        ImGui::EndMenuBar();
+        ImGui::EndMainMenuBar();
     }
+    ImGui::End();
+}
+
+void showEditorWorldObjectsWindow(bool* p_open)
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+    if (!*p_open)
+        return;
+
+    if (!ImGui::Begin("World Objects", p_open, window_flags))
+    {
+        ImGui::End();
+        return;
+    }
+    auto& obj_list = Chaotirender::g_engine_global_context.m_scene_manager->m_object_instance_list;
+    for (int ind = 0; ind < obj_list.size(); ++ind)
+    {
+        const std::string name = obj_list[ind].m_name;
+        int selected_ind = Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind;
+        if (ImGui::Selectable(name.c_str(),  selected_ind== ind))
+        {   
+            if (selected_ind != ind)
+                Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind = ind;
+            else
+                Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind = -1;
+            break;
+        }
+    }
+
+    ImGui::End();
+}
+
+void showEditorRenderScene(bool* p_open, int scene_tex_id, int w, int h, const uint8_t* scene_data)
+{
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+    if (!*p_open)
+        return;
+
+    if (!ImGui::Begin("Render Scene", p_open))
+    {
+        ImGui::End();
+        return;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, scene_tex_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
+
+    ImGui::Image((void*)(intptr_t)scene_tex_id, ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+}
+
+void showEditorFileContentWindow(bool* p_open)
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+        if (!*p_open)
+            return;
+
+        if (!ImGui::Begin("Render Resource", p_open, window_flags))
+        {
+            ImGui::End();
+            return;
+        }
+
+        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH |
+                                       ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
+                                       ImGuiTableFlags_NoBordersInBody;
+
+        auto& obj_res_list = Chaotirender::g_engine_global_context.m_asset_manager->m_object_resource_list;
+
+        for (int ind = 0; ind < obj_res_list.size(); ++ind)
+        {
+            auto& obj_res = obj_res_list[ind];
+
+            const std::string name = obj_res.m_name;
+            const std::string path = obj_res.m_path;
+            const std::string mesh_file = obj_res.m_mesh_source_desc.m_mesh_file;
+            const std::string base_color_file = obj_res.m_material_source_desc.m_base_color_file;
+
+            if (ImGui::TreeNode(name.c_str()))
+            {
+                ImGui::Text(("path: " + path).c_str());
+                ImGui::Text(("mesh file: " + mesh_file).c_str());
+                if (!base_color_file.empty())
+                    ImGui::Text(("material: " + base_color_file).c_str());
+
+                std::string default_name = Chaotirender::g_engine_global_context.m_scene_manager->getNextObjInstanceName(ind);
+                static char cname[32] = "";
+                memset(cname, 0, 128);
+                memcpy(cname, default_name.c_str(), default_name.size());
+                
+                ImGui::Text("Name");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(150.f);
+                ImGui::InputText("##Name", cname, IM_ARRAYSIZE(cname));
+                ImGui::SameLine();
+
+                if (ImGui::Button("Add Object"))
+                {
+                    std::string obj_name = cname;
+                    if (obj_name.empty())
+                        obj_name = default_name;
+                    Chaotirender::g_engine_global_context.m_scene_manager->addObjectInstance(ind, obj_name);
+                }
+
+                ImGui::TreePop();
+            }
+        }
+
+        ImGui::End();
+}
+
+void DrawVecControl(const std::string& label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 100.f) 
+{
+    ImGui::PushID(label.c_str());
+
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, columnWidth);
+        ImGui::Text("%s", label.c_str());
+        ImGui::NextColumn();
+
+        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
+
+        float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+        ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.9f, 0.2f, 0.2f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+        if (ImGui::Button("X", buttonSize))
+            values.x = resetValue;
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.3f, 0.55f, 0.3f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+        if (ImGui::Button("Y", buttonSize))
+            values.y = resetValue;
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.2f, 0.35f, 0.9f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+        if (ImGui::Button("Z", buttonSize))
+            values.z = resetValue;
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+
+        ImGui::PopStyleVar();
+
+        ImGui::Columns(1);
+        ImGui::PopID();
+}
+
+void showEditorDetailWindow(bool* p_open)
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+    if (!*p_open)
+        return;
+
+    if (!ImGui::Begin("Components Details", p_open, window_flags))
+    {
+        ImGui::End();
+        return;
+    }
+
+    // if select object
+    int selected_ind = Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind;
+    if (selected_ind != -1)
+    {
+        // get selected obj
+        auto& selected_obj = Chaotirender::g_engine_global_context.m_scene_manager->m_object_instance_list[selected_ind];
+
+        // name
+        const std::string& name = selected_obj.m_name;
+        static char        cname[128];
+        memset(cname, 0, 128);
+        memcpy(cname, name.c_str(), name.size());
+
+        ImGui::Text("Name");
+        ImGui::SameLine();
+        ImGui::InputText("##Name", cname, IM_ARRAYSIZE(cname)); // ImGuiInputTextFlags_ReadOnly
+
+        std::string new_name = cname;
+        if (!new_name.empty())
+            selected_obj.m_name = new_name;
+        
+        // draw or not
+        ImGui::Checkbox("visible", &selected_obj.m_draw);
+
+        // components
+        // transform
+        DrawVecControl("Position", selected_obj.m_transform.translation);
+        DrawVecControl("Scale", selected_obj.m_transform.scale);
+
+        // materials
+        // selected_obj.
+    }
+
     ImGui::End();
 }
 
@@ -267,7 +496,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Chaotirender", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -343,7 +572,7 @@ int main(int argc, char** argv)
     camera.setAspect(16.f /9.f);
 
     // initScene("asset/mary/Marry.obj");
-    initScene();
+    // initScene();
 
     glGenTextures(1, &scene_tex_id);
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
@@ -402,106 +631,40 @@ int main(int argc, char** argv)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
-        ImGuiWindowFlags   window_flags = ImGuiWindowFlags_NoTitleBar |
-                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
-                                    ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
+        showEditorMenu();
 
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);
-        // std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();
-        ImGui::SetNextWindowSize(ImVec2(1920, 1080), ImGuiCond_Always);
-
-        ImGui::SetNextWindowViewport(main_viewport->ID);
-
-        ImGui::Begin("Editor menu", NULL, window_flags);
-
-        ImGuiID main_docking_id = ImGui::GetID("Main Docking");
-        if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
-        {
-            ImGui::DockBuilderRemoveNode(main_docking_id);
-
-            ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
-            ImGui::DockBuilderSetNodePos(main_docking_id,
-                                         ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
-            ImGui::DockBuilderSetNodeSize(main_docking_id,
-                                          ImVec2(1920.f, 1080.f - 18.0f));
-
-            ImGuiID center = main_docking_id;
-            ImGuiID left;
-            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.25f, nullptr, &left);
-
-            ImGuiID left_other;
-            ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
-
-            ImGuiID left_game_engine;
-            ImGuiID left_asset =
-                ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.30f, nullptr, &left_game_engine);
-
-            ImGui::DockBuilderDockWindow("World Objects", left_asset);
-            ImGui::DockBuilderDockWindow("Components Details", right);
-            ImGui::DockBuilderDockWindow("File Content", left_file_content);
-            ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
-
-            ImGui::DockBuilderFinish(main_docking_id);
-        }
-
-        ImGui::DockSpace(main_docking_id);
-
-        if (ImGui::BeginMainMenuBar())
-        {   
-            if (ImGui::BeginMenu("Render"))
-            {   
-                if (ImGui::MenuItem("parallel", NULL, enable_parallel))
-                    enable_parallel = !enable_parallel;
-
-                if (ImGui::BeginMenu("primitive"))
-                {   
-                    if (ImGui::MenuItem("triangle", NULL, draw_triangle))
-                    {   
-                        draw_triangle = !draw_triangle;
-                        draw_line = !draw_line;
-                        primitive = Chaotirender::PrimitiveType::triangle;
-                    }
-
-                    if (ImGui::MenuItem("line", NULL, draw_line))
-                    {   
-                        draw_triangle = !draw_triangle;
-                        draw_line = !draw_line;
-                        primitive = Chaotirender::PrimitiveType::line;
-                    } 
-                    ImGui::EndMenu();
-                }
-
-                if (ImGui::MenuItem("backe face culling", NULL, back_face_culling))
-                    back_face_culling = !back_face_culling;
-
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
-        ImGui::End();
+        bool show_obj_window = true;
+        showEditorWorldObjectsWindow(&show_obj_window);
 
         // // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        // if (show_demo_window)
-        //     ImGui::ShowDemoWindow(&show_demo_window);
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+        bool show_scene_window = true;
+        showEditorRenderScene(&show_scene_window, scene_tex_id, w, h, scene_data);
+
+        // {
+        //     ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
             
-            glBindTexture(GL_TEXTURE_2D, scene_tex_id);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
+        //     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
+        //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
 
-            ImGui::Image((void*)(intptr_t)scene_tex_id, ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
+        //     ImGui::Image((void*)(intptr_t)scene_tex_id, ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
+        //     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        //     ImGui::End();
+        // }
         // TOCK(GUI)
 
         // TICK(render)
+        bool show_file_window = true;
+        showEditorFileContentWindow(&show_file_window);
+
+        bool show_detail_window = true;
+        showEditorDetailWindow(&show_detail_window);
+
+
         // Rendering
         ImGui::Render();
         int display_w, display_h;

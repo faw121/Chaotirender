@@ -41,11 +41,5 @@ namespace Chaotirender
 
         std::shared_ptr<Chaotirender::SimpleVertexShader> m_simple_vertex_shader {nullptr};
         std::shared_ptr<Chaotirender::PhongPixelShader> m_phong_pixel_shader {nullptr};
-    
-    public:
-        void draw();
-
-    private:
-        void drawCameraPass();
     };
 }
