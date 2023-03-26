@@ -219,6 +219,7 @@ namespace Chaotirender
                 sub_mesh.m_sub_material.m_phong_material.shininess = material.shininess;
 
                 sub_mesh.m_sub_material.m_use_tex = false;
+                sub_mesh.m_sub_material.m_has_tex = false;
 
                 // has tex
                 if (!material.diffuse_texname.empty())
@@ -233,6 +234,7 @@ namespace Chaotirender
                     m_tex_asset_list.back().m_material_tex_data.m_base_color_texture = base_color_tex;
 
                     sub_mesh.m_sub_material.m_use_tex = true;
+                    sub_mesh.m_sub_material.m_has_tex = true;
                     sub_mesh.m_tex_asset_ind = m_tex_asset_list.size() - 1;
                 }
             }
@@ -258,6 +260,7 @@ namespace Chaotirender
         {   
             // use tex
             obj_res.m_sub_mesh[0].m_sub_material.m_use_tex = true;
+            obj_res.m_sub_mesh[0].m_sub_material.m_has_tex = true;
 
             auto tex = std::make_shared<RawTexture>();
             tex->m_texels = loadRawTexture(res_folder + obj_res.m_material_source_desc.m_base_color_file, tex->m_width, tex->m_height, tex->m_channels);

@@ -2,6 +2,7 @@
 
 #include <runtime/render/camera.h>
 #include <runtime/render/render_scene.h>
+#include <runtime/pipeline/data_type/pipeline_data_type.h>
 
 #include <runtime/shader/base/vertex_shader.h>
 #include <runtime/shader/base/pixel_shader.h>
@@ -28,9 +29,7 @@ namespace Chaotirender
         void drawCameraPass();
 
     public:
-        bool m_enable_parallel {true};
-        bool m_back_face_culling {true};
-        bool m_wireframe {false};
+        RenderConfig m_render_config;
         
         Camera m_camera;
         RenderScene m_render_scene;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <runtime/pipeline/data_type/color.h>
+
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
@@ -16,6 +18,28 @@ namespace Chaotirender
     {
         line,
         triangle
+    };
+
+    class RasterizeConfig
+    {
+    public:
+        PrimitiveType primitive {PrimitiveType::triangle};
+        Color line_color {255, 255, 255, 255};
+        bool back_face_culling {true};
+    };
+    
+    class ShadingConfig
+    {
+    public:
+        bool early_z {false};
+    };
+
+    class RenderConfig
+    {
+    public:
+        bool enable_parallel {true};
+        RasterizeConfig rasterize_config;
+        ShadingConfig shading_config;
     };
 
     // use vec, easy to distinguish data for pipeline implementation

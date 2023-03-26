@@ -30,6 +30,19 @@ namespace Chaotirender
     {   
         m_render_scene.m_render_mesh_list.clear();
 
+        // light
+        m_render_scene.m_ambient_light.m_intensity = g_engine_global_context.m_scene_manager->m_ambient_intensity;
+
+        // calculate point light position
+        float pitch = g_engine_global_context.m_scene_manager->m_point_pitch;
+        float yaw = g_engine_global_context.m_scene_manager->m_point_yaw;
+        float radius = g_engine_global_context.m_scene_manager->m_point_radius;
+
+        float xy_radius = radius * glm::sin(glm::radians(pitch));
+        glm::vec3 position(xy_radius * glm::sin(glm::radians(yaw)), radius * glm::cos(glm::radians(pitch)), xy_radius * glm::cos(glm::radians(yaw)));
+        m_render_scene.m_point_light.m_position = position;
+        m_render_scene.m_point_light.m_intensity = g_engine_global_context.m_scene_manager->m_point_intensity;
+
         // fetch object instances that need to draw
         for (auto& obj: g_engine_global_context.m_scene_manager->m_object_instance_list)
         {   
@@ -70,6 +83,7 @@ namespace Chaotirender
         // g_render_pipeline.render_config.rasterize_config.back_face_culling = false;
         // g_render_pipeline.render_config.rasterize_config.primitive = PrimitiveType::line;
         // g_render_pipeline.render_config.rasterize_config.line_color = Color(255, 255, 255);
+        g_render_pipeline.render_config = m_render_config;
 
         drawCameraPass();        
 
@@ -138,6 +152,7 @@ namespace Chaotirender
 
             // TICK(draw)
             // g_render_pipeline.render_config.enable_parallel = false;
+            // g_render_pipeline.render_config.rasterize_config.primitive = PrimitiveType::line;
             g_render_pipeline.draw();
             // TOCK(draw)
         }

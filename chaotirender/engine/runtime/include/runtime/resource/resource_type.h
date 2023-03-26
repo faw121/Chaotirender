@@ -96,6 +96,7 @@ namespace Chaotirender
     struct SubMeshMaterial
     {
         std::string m_material_type {"phong"}; // TODO: not sure, string or enum?
+        bool m_has_tex;
         bool m_use_tex; // if not use, use phong material for shading
         SampleType m_sample_type {SampleType::NEAREST};
         PhongMaterial m_phong_material;

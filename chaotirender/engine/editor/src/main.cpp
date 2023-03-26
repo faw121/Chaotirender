@@ -9,6 +9,7 @@
 #include <runtime/test.h>
 
 #include <imgui.h>
+#include <imgui-knobs.h>
 #include <imgui_internal.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -62,98 +63,8 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-void initScene()
-{
-    auto vertex_buffer = std::make_unique<Chaotirender::VertexBuffer>();
-    auto index_buffer = std::make_unique<Chaotirender::IndexBuffer>();
-
-    simple_vertex_shader = std::make_shared<Chaotirender::SimpleVertexShader>();
-    texture_pixel_shader = std::make_shared<Chaotirender::TexturePixelShader>();
-
-    Chaotirender::setUp(*vertex_buffer, *index_buffer, *simple_vertex_shader, *texture_pixel_shader);
-
-    camera.setFov(glm::half_pi<float>() / 2);
-
-    camera.lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-    Chaotirender::buffer_id vid = Chaotirender::g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
-    Chaotirender::g_render_pipeline.bindVertexBuffer(vid);
-
-    Chaotirender::buffer_id iid = Chaotirender::g_render_pipeline.addIndexBuffer(std::move(index_buffer));
-    Chaotirender::g_render_pipeline.bindIndexBuffer(iid);
-
-    Chaotirender::g_render_pipeline.setVertexShader(simple_vertex_shader);
-    Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
-
-    int w, h, n;
-    Chaotirender::RenderResource render_resource;
-    // auto texture = render_resource.loadTexture("asset/spot/spot_texture.png");
-    //  texture->m_sample_type = SampleType::BILINEAR;
-    // texture_pixel_shader->texture = texture;
-    auto raw = render_resource.loadRawTexture("asset/spot/spot_texture.png", w, h, n);
-    auto id = Chaotirender::g_render_pipeline.addTexture(w, h, n, raw);
-    Chaotirender::g_render_pipeline.bindPixelShaderTexture(id, "texture", Chaotirender::SampleType::BILINEAR);
-}
-
-void initClippingScene()
-{
-    auto vertex_buffer = std::make_unique<Chaotirender::VertexBuffer>();
-    auto index_buffer = std::make_unique<Chaotirender::IndexBuffer>();
-
-    vertex_buffer->push_back(Chaotirender::Vertex(0, 0, 0));
-    vertex_buffer->push_back(Chaotirender::Vertex(0.8f, -0.5f, -2));
-    vertex_buffer->push_back(Chaotirender::Vertex(0.8f, 0.5f, -2));
-    vertex_buffer->push_back(Chaotirender::Vertex(-0.8f, -0.5f, -2));
-    vertex_buffer->push_back(Chaotirender::Vertex(-0.8f, 0.5f, -2));
-
-    // index_buffer->push_back(0);
-    // index_buffer->push_back(1);
-    // index_buffer->push_back(2);
-
-    // index_buffer->push_back(0);
-    // index_buffer->push_back(2);
-    // index_buffer->push_back(4);
-
-    index_buffer->push_back(0);
-    index_buffer->push_back(4);
-    index_buffer->push_back(3);
-
-    // index_buffer->push_back(0);
-    // index_buffer->push_back(3);
-    // index_buffer->push_back(1);
-
-    // index_buffer->push_back(1);
-    // index_buffer->push_back(2);
-    // index_buffer->push_back(4);
-
-    // index_buffer->push_back(4);
-    // index_buffer->push_back(3);
-    // index_buffer->push_back(1);
-
-    simple_vertex_shader = std::make_shared<Chaotirender::SimpleVertexShader>();
-    texture_pixel_shader = std::make_shared<Chaotirender::TexturePixelShader>();
-
-    camera.setFov(glm::half_pi<float>() / 2);
-
-    camera.lookAt(glm::vec3(0, 0, -1.f), glm::vec3(0, 0, -5), glm::vec3(0, 1, 0));
-
-    Chaotirender::buffer_id vid = Chaotirender::g_render_pipeline.addVertexBuffer(std::move(vertex_buffer));
-    Chaotirender::g_render_pipeline.bindVertexBuffer(vid);
-
-    Chaotirender::buffer_id iid = Chaotirender::g_render_pipeline.addIndexBuffer(std::move(index_buffer));
-    Chaotirender::g_render_pipeline.bindIndexBuffer(iid);
-
-    Chaotirender::g_render_pipeline.setVertexShader(simple_vertex_shader);
-    Chaotirender::g_render_pipeline.setPixelShader(texture_pixel_shader);
-}
-
 void showEditorMenu()
 {   
-    bool enable_parallel = true;
-    bool draw_triangle = true;
-    bool draw_line = false;
-    bool back_face_culling = true;
-
     ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
     // ImGuiWindowFlags   window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar |
     //                             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
@@ -196,8 +107,12 @@ void showEditorMenu()
         ImGuiID left_asset =
             ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.30f, nullptr, &left_game_engine);
 
+        ImGuiID down_right;
+        ImGuiID up_right = ImGui::DockBuilderSplitNode(right, ImGuiDir_Up, 0.3f, nullptr, &down_right);
+
         ImGui::DockBuilderDockWindow("World Objects", left_asset);
-        ImGui::DockBuilderDockWindow("Components Details", right);
+        ImGui::DockBuilderDockWindow("Components Details", down_right);
+        ImGui::DockBuilderDockWindow("Light", up_right);
         ImGui::DockBuilderDockWindow("Render Resource", left_file_content);
         ImGui::DockBuilderDockWindow("Render Scene", left_game_engine);
 
@@ -206,12 +121,21 @@ void showEditorMenu()
 
     ImGui::DockSpace(main_docking_id);
 
+    static bool enable_parallel = true;
+    static bool draw_triangle = true;
+    static bool draw_line = false;
+    static bool back_face_culling = true;
+
     if (ImGui::BeginMainMenuBar())
     {   
         if (ImGui::BeginMenu("Render"))
         {   
             if (ImGui::MenuItem("parallel", NULL, enable_parallel))
+            {
                 enable_parallel = !enable_parallel;
+                Chaotirender::g_engine_global_context.m_render_system->m_render_config.enable_parallel = enable_parallel;
+            }
+                
 
             if (ImGui::BeginMenu("primitive"))
             {   
@@ -219,18 +143,23 @@ void showEditorMenu()
                 {   
                     draw_triangle = !draw_triangle;
                     draw_line = !draw_line;
+                    Chaotirender::g_engine_global_context.m_render_system->m_render_config.rasterize_config.primitive = Chaotirender::PrimitiveType::triangle;
                 }
 
                 if (ImGui::MenuItem("line", NULL, draw_line))
                 {   
                     draw_triangle = !draw_triangle;
                     draw_line = !draw_line;
+                    Chaotirender::g_engine_global_context.m_render_system->m_render_config.rasterize_config.primitive = Chaotirender::PrimitiveType::line;
                 } 
                 ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("backe face culling", NULL, back_face_culling))
+            {
                 back_face_culling = !back_face_culling;
+                Chaotirender::g_engine_global_context.m_render_system->m_render_config.rasterize_config.back_face_culling = back_face_culling;
+            }
 
             ImGui::EndMenu();
         }
@@ -242,8 +171,6 @@ void showEditorMenu()
 void showEditorWorldObjectsWindow(bool* p_open)
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-
-    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 
     if (!*p_open)
         return;
@@ -273,8 +200,6 @@ void showEditorWorldObjectsWindow(bool* p_open)
 
 void showEditorRenderScene(bool* p_open, int scene_tex_id, int w, int h, const uint8_t* scene_data)
 {
-    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-
     if (!*p_open)
         return;
 
@@ -297,126 +222,195 @@ void showEditorFileContentWindow(bool* p_open)
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
 
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    if (!*p_open)
+        return;
 
-        if (!*p_open)
-            return;
-
-        if (!ImGui::Begin("Render Resource", p_open, window_flags))
-        {
-            ImGui::End();
-            return;
-        }
-
-        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH |
-                                       ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
-                                       ImGuiTableFlags_NoBordersInBody;
-
-        auto& obj_res_list = Chaotirender::g_engine_global_context.m_asset_manager->m_object_resource_list;
-
-        for (int ind = 0; ind < obj_res_list.size(); ++ind)
-        {
-            auto& obj_res = obj_res_list[ind];
-
-            const std::string name = obj_res.m_name;
-            const std::string path = obj_res.m_path;
-            const std::string mesh_file = obj_res.m_mesh_source_desc.m_mesh_file;
-            const std::string base_color_file = obj_res.m_material_source_desc.m_base_color_file;
-
-            if (ImGui::TreeNode(name.c_str()))
-            {
-                ImGui::Text(("path: " + path).c_str());
-                ImGui::Text(("mesh file: " + mesh_file).c_str());
-                if (!base_color_file.empty())
-                    ImGui::Text(("material: " + base_color_file).c_str());
-
-                std::string default_name = Chaotirender::g_engine_global_context.m_scene_manager->getNextObjInstanceName(ind);
-                static char cname[32] = "";
-                memset(cname, 0, 128);
-                memcpy(cname, default_name.c_str(), default_name.size());
-                
-                ImGui::Text("Name");
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(150.f);
-                ImGui::InputText("##Name", cname, IM_ARRAYSIZE(cname));
-                ImGui::SameLine();
-
-                if (ImGui::Button("Add Object"))
-                {
-                    std::string obj_name = cname;
-                    if (obj_name.empty())
-                        obj_name = default_name;
-                    Chaotirender::g_engine_global_context.m_scene_manager->addObjectInstance(ind, obj_name);
-                }
-
-                ImGui::TreePop();
-            }
-        }
-
+    if (!ImGui::Begin("Render Resource", p_open, window_flags))
+    {
         ImGui::End();
+        return;
+    }
+
+    auto& obj_res_list = Chaotirender::g_engine_global_context.m_asset_manager->m_object_resource_list;
+
+    for (int ind = 0; ind < obj_res_list.size(); ++ind)
+    {
+        auto& obj_res = obj_res_list[ind];
+
+        const std::string name = obj_res.m_name;
+        const std::string path = obj_res.m_path;
+        const std::string mesh_file = obj_res.m_mesh_source_desc.m_mesh_file;
+        const std::string base_color_file = obj_res.m_material_source_desc.m_base_color_file;
+
+        if (ImGui::TreeNode(name.c_str()))
+        {
+            ImGui::Text(("path: " + path).c_str());
+            ImGui::Text(("mesh file: " + mesh_file).c_str());
+            if (!base_color_file.empty())
+                ImGui::Text(("material: " + base_color_file).c_str());
+
+            std::string default_name = Chaotirender::g_engine_global_context.m_scene_manager->getNextObjInstanceName(ind);
+            static char buf[32] = "";
+            memset(buf, 0, 32);
+            memcpy(buf, default_name.c_str(), default_name.size());
+            
+            ImGui::Text("Name");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150.f);
+
+            // static std::string obj_name(default_name);
+            // if (ImGui::InputText("##Name", buf, IM_ARRAYSIZE(buf)))
+            // {
+            //     obj_name = buf;
+            //     if (obj_name.empty())
+            //         obj_name = default_name;
+            // }
+            // std::cout << "obj name: " << obj_name << std::endl;
+            //  TODO: how to save buf value after cursor focus outside, static didn't work, maybe use a class member value...
+            ImGui::InputText("##Name", buf, IM_ARRAYSIZE(buf));
+
+            std::string obj_name = buf;
+            if (obj_name.empty())
+                obj_name = default_name;
+
+            ImGui::SameLine();
+            if (ImGui::Button("Add Object"))
+                Chaotirender::g_engine_global_context.m_scene_manager->addObjectInstance(ind, obj_name);
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::End();
 }
 
-void DrawVecControl(const std::string& label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 100.f) 
-{
+void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f) 
+{   
+    std::string button_labels[3] = {"X", "Y", "Z"};
+    if (color)
+    {
+        button_labels[0] = "R";
+        button_labels[1] = "G";
+        button_labels[2] = "B";
+    }
+
+    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
+
+    float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.9f, 0.2f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+    
+    if (ImGui::Button(button_labels[0].c_str(), buttonSize))
+        values.x = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat(("##" + button_labels[0]).c_str(), &values.x, speed, min, max, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.3f, 0.55f, 0.3f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+    if (ImGui::Button(button_labels[1].c_str(), buttonSize))
+        values.y = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat(("##" + button_labels[1]).c_str(), &values.y, speed, min, max, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.2f, 0.35f, 0.9f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+    if (ImGui::Button(button_labels[2].c_str(), buttonSize))
+        values.z = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat(("##" + button_labels[2]).c_str(), &values.z, speed, min, max, "%.2f");
+    ImGui::PopItemWidth();
+
+    ImGui::PopStyleVar();
+    // ImGui::PopID();
+}
+
+void DrawVecControl(const std::string& label, glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f, float columnWidth = 100.f) 
+{   
+    // std::string button_labels[3] = {"X", "Y", "Z"};
+    // if (color)
+    // {
+    //     button_labels[0] = "R";
+    //     button_labels[1] = "G";
+    //     button_labels[2] = "B";
+    // }
+
     ImGui::PushID(label.c_str());
 
-        ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, columnWidth);
-        ImGui::Text("%s", label.c_str());
-        ImGui::NextColumn();
+    ImGui::Columns(2);
+    ImGui::SetColumnWidth(0, columnWidth);
+    ImGui::Text("%s", label.c_str());
+    ImGui::NextColumn();
 
-        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
+    DrawVecControlNoText(values, color, min, max, speed, resetValue);
 
-        float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-        ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+    // ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    // ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.9f, 0.2f, 0.2f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
-        if (ImGui::Button("X", buttonSize))
-            values.x = resetValue;
-        ImGui::PopStyleColor(3);
+    // float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    // ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
 
-        ImGui::SameLine();
-        ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
+    // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.9f, 0.2f, 0.2f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
+    
+    // if (ImGui::Button(button_labels[0].c_str(), buttonSize))
+    //     values.x = resetValue;
+    // ImGui::PopStyleColor(3);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.3f, 0.55f, 0.3f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
-        if (ImGui::Button("Y", buttonSize))
-            values.y = resetValue;
-        ImGui::PopStyleColor(3);
+    // ImGui::SameLine();
+    // ImGui::DragFloat(("##" + button_labels[0]).c_str(), &values.x, speed, min, max, "%.2f");
+    // ImGui::PopItemWidth();
+    // ImGui::SameLine();
 
-        ImGui::SameLine();
-        ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
+    // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.3f, 0.55f, 0.3f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
+    // if (ImGui::Button(button_labels[1].c_str(), buttonSize))
+    //     values.y = resetValue;
+    // ImGui::PopStyleColor(3);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.2f, 0.35f, 0.9f, 1.0f});
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
-        if (ImGui::Button("Z", buttonSize))
-            values.z = resetValue;
-        ImGui::PopStyleColor(3);
+    // ImGui::SameLine();
+    // ImGui::DragFloat(("##" + button_labels[1]).c_str(), &values.y, speed, min, max, "%.2f");
+    // ImGui::PopItemWidth();
+    // ImGui::SameLine();
 
-        ImGui::SameLine();
-        ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
-        ImGui::PopItemWidth();
+    // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.2f, 0.35f, 0.9f, 1.0f});
+    // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
+    // if (ImGui::Button(button_labels[2].c_str(), buttonSize))
+    //     values.z = resetValue;
+    // ImGui::PopStyleColor(3);
 
-        ImGui::PopStyleVar();
+    // ImGui::SameLine();
+    // ImGui::DragFloat(("##" + button_labels[2]).c_str(), &values.z, speed, min, max, "%.2f");
+    // ImGui::PopItemWidth();
 
-        ImGui::Columns(1);
-        ImGui::PopID();
+    // ImGui::PopStyleVar();
+
+    ImGui::PopID();
+    ImGui::Columns(1);
+    // ImGui::PopID();
 }
 
 void showEditorDetailWindow(bool* p_open)
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-
-    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 
     if (!*p_open)
         return;
@@ -454,11 +448,109 @@ void showEditorDetailWindow(bool* p_open)
         // components
         // transform
         DrawVecControl("Position", selected_obj.m_transform.translation);
-        DrawVecControl("Scale", selected_obj.m_transform.scale);
+        DrawVecControl("Scale", selected_obj.m_transform.scale, false, 0.f, 0.f, 0.1f, 1.f);
 
-        // materials
-        // selected_obj.
+        // submesh
+        if (ImGui::TreeNode("Sub Meshes"))
+        {
+            // for each submesh
+            int submesh_count = 0;
+            for (auto& submesh: selected_obj.m_sub_mesh)
+            {
+                if (ImGui::TreeNode(("Sub Meshes " + std::to_string(submesh_count)).c_str()))
+                {   
+                    // mesh info
+                    ImGui::Text("Mesh:");
+                
+                    ImGui::Text(
+                        (std::to_string(submesh.m_mesh_size.m_num_vertices) + " vertices, " 
+                        + std::to_string(submesh.m_mesh_size.m_num_triangles) + " triangles").c_str());
+
+                    // material
+                    ImGui::Text("Material:");
+                    ImGui::Text((submesh.m_sub_material.m_material_type + " material").c_str());
+
+                    // if has tex, toggle tex
+                    if (submesh.m_sub_material.m_has_tex)
+                    {
+                        ImGui::Checkbox("Use Texture", &submesh.m_sub_material.m_use_tex);
+                    }
+
+                    // phong parameter
+                    // DrawVecControl("Ka", submesh.m_sub_material.m_phong_material.ka);
+                    DrawVecControl("Kd", submesh.m_sub_material.m_phong_material.kd, 0.f, 1.f);
+                    DrawVecControl("Ks", submesh.m_sub_material.m_phong_material.ks, 0.f, 1.f);
+
+                    ImGui::Columns(2);
+                    ImGui::SetColumnWidth(0, 100.f);
+                    
+                    ImGui::Text("Shininess");
+
+                    ImGui::NextColumn();
+                    ImGui::SetNextItemWidth(296.f);
+                    ImGui::DragFloat("##Shininess", &submesh.m_sub_material.m_phong_material.shininess, 1.f, 10.f, 300.f, "%.3f");
+
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
     }
+
+    ImGui::End();
+}
+
+void drawSphereControl(const std::string& label, float& yaw, float& pitch, float speed = 1.f)
+{
+    int knob_flags = ImGuiKnobFlags_NoTitle | ImGuiKnobFlags_NoInput | ImGuiKnobFlags_DragHorizontal;
+    ImGuiKnobs::Knob((label + "Yaw").c_str(), &yaw,
+        0.f, 360.f, speed, "%.1f", ImGuiKnobVariant_Dot, 0.f, knob_flags);
+
+    ImGui::SameLine();
+    if (ImGui::BeginTable("table", 2))
+    {
+        ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, 10.0f);
+        ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthFixed, 500.0f);
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("");
+        ImGui::TableNextColumn();
+        ImGui::Text("");
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("");
+        ImGui::TableNextColumn();
+        ImGui::SliderFloat(("##" + label + "Pitch").c_str(), &pitch, 0.f, 180.f, "%.1f");
+
+        ImGui::EndTable();
+    }
+}
+
+void showEditorLightWindow(bool* p_open)
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+    if (!*p_open)
+        return;
+
+    if (!ImGui::Begin("Light", p_open, window_flags))
+    {
+        ImGui::End();
+        return;
+    }
+
+    // ambient light
+    DrawVecControl("Ambient", Chaotirender::g_engine_global_context.m_scene_manager->m_ambient_intensity, true, 0.f, 500.f, 0.5f, 50.f);
+
+    // directional light
+    // ImGui::Text("Directional Light");
+    // drawSphereControl("Directional", Chaotirender::g_engine_global_context.m_scene_manager->m_direction_yaw, Chaotirender::g_engine_global_context.m_scene_manager->m_direction_pitch);
+    // DrawVecControlNoText(Chaotirender::g_engine_global_context.m_scene_manager->m_directional_intensity, true, 0.f, 500.f, 0.5f);
+    
+    ImGui::Text("Point Light");
+    drawSphereControl("Point", Chaotirender::g_engine_global_context.m_scene_manager->m_point_yaw, Chaotirender::g_engine_global_context.m_scene_manager->m_point_pitch);
+    DrawVecControlNoText(Chaotirender::g_engine_global_context.m_scene_manager->m_point_intensity, true, 0.f, 500.f, 0.5f, 100.f);
 
     ImGui::End();
 }
@@ -565,14 +657,10 @@ int main(int argc, char** argv)
     int w, h;
     const uint8_t* scene_data = nullptr;
 
-    // initScene();
     // set scene view port
     Chaotirender::g_render_pipeline.setViewPort(1280, 720);
     // render_scene.m_camera.setAspect(16.f / 9.f);
     camera.setAspect(16.f /9.f);
-
-    // initScene("asset/mary/Marry.obj");
-    // initScene();
 
     glGenTextures(1, &scene_tex_id);
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
@@ -587,12 +675,6 @@ int main(int argc, char** argv)
     // glBindTexture(GL_TEXTURE_2D, scene_tex_id);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
 
-    bool enable_parallel = true;
-    bool draw_triangle = true;
-    bool draw_line = false;
-    bool back_face_culling = true;
-    Chaotirender::PrimitiveType primitive = Chaotirender::PrimitiveType::triangle;
-
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -604,28 +686,12 @@ int main(int argc, char** argv)
         glfwPollEvents();
 
         processEditorCommand();
-
-        // simple_vertex_shader->view_matrix = camera.getViewMatrix();
-        // simple_vertex_shader->projection_matrix = camera.getProjectionMatrix();
-        // // // // TICK(draw)
-        // texture_pixel_shader->camera_position = camera.position();
-        // Chaotirender::drawAndGetScene(w, h, scene_data);
-
+        
         engine.m_render_system->swapRenderData();
 
-        // TICK(outdraw)
-        Chaotirender::g_render_pipeline.render_config.enable_parallel = enable_parallel;
-        Chaotirender::g_render_pipeline.render_config.rasterize_config.back_face_culling = back_face_culling;
-        Chaotirender::g_render_pipeline.render_config.rasterize_config.primitive = primitive;
-        Chaotirender::g_render_pipeline.render_config.rasterize_config.line_color = Chaotirender::Color(255, 255, 255);
-
         engine.m_render_system->drawOneFrame(w, h, scene_data);
-        // TOCK(outdraw)
 
-        // drawAndGetScene(w, h, scene_data);
-        // TOCK(draw)
 
-        // TICK(GUI)
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -640,29 +706,18 @@ int main(int argc, char** argv)
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+
         bool show_scene_window = true;
         showEditorRenderScene(&show_scene_window, scene_tex_id, w, h, scene_data);
 
-        // {
-        //     ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-            
-        //     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
-        //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
-
-        //     ImGui::Image((void*)(intptr_t)scene_tex_id, ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
-
-        //     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        //     ImGui::End();
-        // }
-        // TOCK(GUI)
-
-        // TICK(render)
         bool show_file_window = true;
         showEditorFileContentWindow(&show_file_window);
 
         bool show_detail_window = true;
         showEditorDetailWindow(&show_detail_window);
+
+        bool show_light_window = true;
+        showEditorLightWindow(&show_light_window);
 
 
         // Rendering

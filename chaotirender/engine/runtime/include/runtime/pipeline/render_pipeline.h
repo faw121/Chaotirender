@@ -15,28 +15,6 @@
 
 namespace Chaotirender
 {
-    class RasterizeConfig
-    {
-    public:
-        PrimitiveType primitive {PrimitiveType::triangle};
-        Color line_color;
-        bool back_face_culling {true};
-    };
-    
-    class ShadingConfig
-    {
-    public:
-        bool early_z {false};
-    };
-
-    class RenderConfig
-    {
-    public:
-        bool enable_parallel {true};
-        RasterizeConfig rasterize_config;
-        ShadingConfig shading_config;
-    };
-
     using VertexBufferList = BufferList<VertexBuffer>;
     using IndexBufferList = BufferList<IndexBuffer>;
     using TextureBufferList = BufferList<Texture>;

@@ -13,13 +13,13 @@ namespace Chaotirender
 
     struct AmbientLight
     {
-        glm::vec3 m_intensity {0.f, 0.f, 0.f};
+        glm::vec3 m_intensity {50.f, 50.f, 50.f};
     };
 
     struct DirectionalLight
     {
         glm::vec3 m_direction;
-        glm::vec3 m_intensity {0.f, 0.f, 0.f};
+        glm::vec3 m_intensity {100.f, 100.f, 100.f};
     };
 
     struct PointLight
