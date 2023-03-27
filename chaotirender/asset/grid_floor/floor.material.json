@@ -1,0 +1,9 @@
+{
+  "material_type": "phong",
+  "base_color_file": "floor_diffuse.tga",
+  "metallic_file": "",
+  "roughness_file": "",
+  "normal_file": "",
+  "occlusion_file": "",
+  "emissive_file": ""
+}

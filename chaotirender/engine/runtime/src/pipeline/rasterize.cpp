@@ -120,16 +120,16 @@ namespace Chaotirender
     void Rasterize::barycentric()
     {
         // interpolate attributes
-        float alpha, beta, gamma, s;
+        float s;
         s = m_s0 + m_s1 + m_s2;
 
-        alpha = m_s0 / s;
-        beta  = m_s1 / s;
-        gamma = m_s2 / s;
+        m_alpha = m_s0 / s;
+        m_beta  = m_s1 / s;
+        m_gamma = m_s2 / s;
 
-        m_alphaw = alpha / m_w0;
-        m_betaw = beta / m_w1;
-        m_gammaw = gamma / m_w2;
+        m_alphaw = m_alpha / m_w0;
+        m_betaw = m_beta / m_w1;
+        m_gammaw = m_gamma / m_w2;
 
         m_w_inverse = m_alphaw + m_betaw + m_gammaw;
     }
@@ -168,8 +168,9 @@ namespace Chaotirender
                     // interpolate attributes
                     barycentric();
 
-                    // fragment.depth = 1 / m_w_inverse; // absolute value, doesn't work for othorgonal
-                    fragment.depth = (m_alphaw * p0.z + m_betaw * p1.z + m_gammaw * p2.z) / m_w_inverse;
+                    // fragment.depth = 1 / m_w_inverse; // doesn't work for othorgonal
+                    // !!! z is already divided by w, no correction is used, and -k/z is still increasing by z
+                    fragment.depth = m_alpha * p0.z + m_beta * p1.z + m_gamma * p2.z;
 
                     fragment.normal = (m_alphaw * triangle.m_v0.normal + m_betaw * triangle.m_v1.normal + m_gammaw * triangle.m_v2.normal) / m_w_inverse;
 

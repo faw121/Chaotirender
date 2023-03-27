@@ -80,6 +80,9 @@ namespace Chaotirender
         float m_alphaw;
         float m_betaw;
         float m_gammaw;
+        float m_alpha;
+        float m_beta;
+        float m_gamma;
 
         TriangleBoundingBox m_bounding_box;
 
