@@ -57,6 +57,8 @@ namespace Chaotirender
         glm::vec2 uv;
 
         glm::vec3 world_position;
+
+        glm::vec4 light_position;
     
     public:
         Vertex(float px, float py, float pz, float nx, float ny, float nz, float u, float v):

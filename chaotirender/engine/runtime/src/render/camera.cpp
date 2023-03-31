@@ -24,7 +24,7 @@ namespace Chaotirender
 
     void Camera::zoom(float offset)
     {
-        m_fov = glm::clamp(m_fov - glm::radians(offset), MIN_FOV, MAX_FOV);
+        m_fov = glm::clamp(m_fov - glm::radians(offset), glm::radians(MIN_FOV), glm::radians(MAX_FOV));
     }
 
     void Camera::lookAt(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up)

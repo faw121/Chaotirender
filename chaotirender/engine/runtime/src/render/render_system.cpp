@@ -16,7 +16,7 @@ namespace Chaotirender
     {
         // camera setup
         m_camera.setFov(glm::half_pi<float>() / 2);
-        m_camera.lookAt(glm::vec3(0, 0, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        m_camera.lookAt(glm::vec3(0, 5.f, 2.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
         // shaders
         m_vertex_shader_map["simple"] = std::make_shared<SimpleVertexShader>();
@@ -39,8 +39,19 @@ namespace Chaotirender
         float radius = g_engine_global_context.m_scene_manager->m_point_radius;
 
         float xy_radius = radius * glm::sin(glm::radians(pitch));
-        glm::vec3 position(xy_radius * glm::sin(glm::radians(yaw)), radius * glm::cos(glm::radians(pitch)), xy_radius * glm::cos(glm::radians(yaw)));
+        float x = xy_radius * glm::sin(glm::radians(yaw));
+        float y = radius * glm::cos(glm::radians(pitch));
+        float z = xy_radius * glm::cos(glm::radians(yaw));
+
+        glm::vec3 position(x, y, z);
+        glm::vec3 right = glm::normalize(glm::vec3(-x, 0, z));
+        if (pitch == 0 || pitch == 180)
+            right = glm::vec3(0, 0, 1);
+        glm::vec3 up = glm::normalize(glm::cross(right, -position));
+
         m_render_scene.m_point_light.m_position = position;
+        m_render_scene.m_point_light.m_right = right;
+        m_render_scene.m_point_light.m_up = up;
         m_render_scene.m_point_light.m_intensity = g_engine_global_context.m_scene_manager->m_point_intensity;
 
         // fetch object instances that need to draw
@@ -51,8 +62,8 @@ namespace Chaotirender
                 // model matrix
                 // TODO: rotate
                 glm::mat4x4 model_mat(1.f);
-                model_mat = glm::translate(model_mat, obj.m_transform.translation);
                 model_mat = glm::scale(model_mat, obj.m_transform.scale);
+                model_mat = glm::translate(model_mat, obj.m_transform.translation);
 
                 for (auto& mesh: obj.m_sub_mesh)
                 {

@@ -10,7 +10,7 @@ namespace Chaotirender
     public:
         static const glm::vec3 X, Y, Z;
         static constexpr float MIN_FOV {0.1f};
-        static constexpr float MAX_FOV {45.f};
+        static constexpr float MAX_FOV {90.f};
 
         void move(glm::vec3 delta);
         void rotate(float pitch, float yaw); // pitch, yaw
