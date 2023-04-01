@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp>
 
 #include <vector>
+#include <memory>
 
 namespace Chaotirender
 {   
@@ -14,6 +15,7 @@ namespace Chaotirender
     public:
         void addObjectInstance(int ind, std::string name);
         std::string getNextObjInstanceName(int ind);
+        void removeObjectInstance(int ind);
 
     public:
         // light

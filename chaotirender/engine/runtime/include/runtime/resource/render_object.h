@@ -3,6 +3,7 @@
 #include <runtime/resource/resource_type.h>
 
 #include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include <vector>
 #include <string>
@@ -30,6 +31,7 @@ namespace Chaotirender
     {
         glm::vec3 translation {0.f, 0.f, 0.f};
         glm::vec3 rotation {0.f, 0.f, 0.f}; // not sure, rotate around model axis or world axis?
+        glm::quat rotation_q {1.f, 0.f, 0.f, 0.f};
         glm::vec3 scale {1.f, 1.f, 1.f};
     };
 
@@ -37,6 +39,8 @@ namespace Chaotirender
     {
     public:
         std::string m_name;
+
+        int m_res_ind {-1};
 
         Transform m_transform;
 

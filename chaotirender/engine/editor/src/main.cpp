@@ -22,7 +22,10 @@
 // 2. does renderPipeline need to be global?
 // 3. tile based: performance and mipmap
 // 4. ** gamma correction
-// 5. ** refractor folder structure
+// 5. ** remove object 
+// 5. ** rotation: quauternion record overall rotation
+// 6. point light is difficult
+
 
 float m_mouse_x = 0;
 float m_mouse_y = 0;
@@ -125,6 +128,7 @@ void showEditorMenu()
     static bool draw_triangle = true;
     static bool draw_line = false;
     static bool back_face_culling = true;
+    static bool early_z = false;
 
     if (ImGui::BeginMainMenuBar())
     {   
@@ -161,6 +165,12 @@ void showEditorMenu()
                 Chaotirender::g_engine_global_context.m_render_system->m_render_config.rasterize_config.back_face_culling = back_face_culling;
             }
 
+            if (ImGui::MenuItem("early-z", NULL, early_z))
+            {
+                early_z = !early_z;
+                Chaotirender::g_engine_global_context.m_render_system->m_render_config.shading_config.early_z = early_z;
+            }
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -185,13 +195,23 @@ void showEditorWorldObjectsWindow(bool* p_open)
     {
         const std::string name = obj_list[ind].m_name;
         int selected_ind = Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind;
-        if (ImGui::Selectable(name.c_str(),  selected_ind== ind))
+        if (ImGui::Selectable(name.c_str(),  selected_ind == ind))
         {   
             if (selected_ind != ind)
                 Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind = ind;
             else
                 Chaotirender::g_engine_global_context.m_scene_manager->m_selected_obj_ins_ind = -1;
             break;
+        }
+        // remove from list
+        if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
+        {
+            if (ImGui::MenuItem("Remove"))
+            {   
+                Chaotirender::g_engine_global_context.m_scene_manager->removeObjectInstance(ind);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
         }
     }
 
@@ -284,7 +304,7 @@ void showEditorFileContentWindow(bool* p_open)
     ImGui::End();
 }
 
-void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f) 
+bool DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f) 
 {   
     std::string button_labels[3] = {"X", "Y", "Z"};
     if (color)
@@ -293,6 +313,7 @@ void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f
         button_labels[1] = "G";
         button_labels[2] = "B";
     }
+    bool pressed = false;
 
     ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
@@ -305,11 +326,16 @@ void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.8f, 0.1f, 0.15f, 1.0f});
     
     if (ImGui::Button(button_labels[0].c_str(), buttonSize))
+    {
         values.x = resetValue;
+        pressed = true;
+    }
+        
     ImGui::PopStyleColor(3);
 
     ImGui::SameLine();
-    ImGui::DragFloat(("##" + button_labels[0]).c_str(), &values.x, speed, min, max, "%.2f");
+    if (ImGui::DragFloat(("##" + button_labels[0]).c_str(), &values.x, speed, min, max, "%.2f"))
+        pressed = true;
     ImGui::PopItemWidth();
     ImGui::SameLine();
 
@@ -317,11 +343,15 @@ void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.3f, 0.55f, 0.3f, 1.0f});
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.2f, 0.45f, 0.2f, 1.0f});
     if (ImGui::Button(button_labels[1].c_str(), buttonSize))
+    {   
         values.y = resetValue;
+        pressed = true;
+    }
     ImGui::PopStyleColor(3);
 
     ImGui::SameLine();
-    ImGui::DragFloat(("##" + button_labels[1]).c_str(), &values.y, speed, min, max, "%.2f");
+    if (ImGui::DragFloat(("##" + button_labels[1]).c_str(), &values.y, speed, min, max, "%.2f"))
+        pressed = true;
     ImGui::PopItemWidth();
     ImGui::SameLine();
 
@@ -329,18 +359,23 @@ void DrawVecControlNoText(glm::vec3& values, bool color = false, float min = 0.f
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 {0.2f, 0.35f, 0.9f, 1.0f});
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 {0.1f, 0.25f, 0.8f, 1.0f});
     if (ImGui::Button(button_labels[2].c_str(), buttonSize))
+    {
         values.z = resetValue;
+        pressed = true;
+    }
     ImGui::PopStyleColor(3);
 
     ImGui::SameLine();
-    ImGui::DragFloat(("##" + button_labels[2]).c_str(), &values.z, speed, min, max, "%.2f");
+    if (ImGui::DragFloat(("##" + button_labels[2]).c_str(), &values.z, speed, min, max, "%.2f"))
+        pressed = true;
     ImGui::PopItemWidth();
 
     ImGui::PopStyleVar();
     // ImGui::PopID();
+    return pressed;
 }
 
-void DrawVecControl(const std::string& label, glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f, float columnWidth = 100.f) 
+bool DrawVecControl(const std::string& label, glm::vec3& values, bool color = false, float min = 0.f, float max = 0.f, float speed = 0.1f, float resetValue = 0.f, float columnWidth = 100.f) 
 {   
     // std::string button_labels[3] = {"X", "Y", "Z"};
     // if (color)
@@ -357,7 +392,7 @@ void DrawVecControl(const std::string& label, glm::vec3& values, bool color = fa
     ImGui::Text("%s", label.c_str());
     ImGui::NextColumn();
 
-    DrawVecControlNoText(values, color, min, max, speed, resetValue);
+    bool pressed = DrawVecControlNoText(values, color, min, max, speed, resetValue);
 
     // ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
     // ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 {0, 0});
@@ -403,9 +438,11 @@ void DrawVecControl(const std::string& label, glm::vec3& values, bool color = fa
 
     // ImGui::PopStyleVar();
 
-    ImGui::PopID();
-    ImGui::Columns(1);
     // ImGui::PopID();
+    ImGui::Columns(1);
+    ImGui::PopID();
+
+    return pressed;
 }
 
 void showEditorDetailWindow(bool* p_open)
@@ -449,6 +486,7 @@ void showEditorDetailWindow(bool* p_open)
         // transform
         DrawVecControl("Position", selected_obj.m_transform.translation);
         DrawVecControl("Scale", selected_obj.m_transform.scale, false, 0.f, 0.f, 0.1f, 1.f);
+        DrawVecControl("Rotation", selected_obj.m_transform.rotation, false, -360.f, 360.f, 1.5f, 0.f);
 
         // submesh
         if (ImGui::TreeNode("Sub Meshes"))
@@ -478,8 +516,8 @@ void showEditorDetailWindow(bool* p_open)
 
                     // phong parameter
                     // DrawVecControl("Ka", submesh.m_sub_material.m_phong_material.ka);
-                    DrawVecControl("Kd", submesh.m_sub_material.m_phong_material.kd, 0.f, 1.f);
-                    DrawVecControl("Ks", submesh.m_sub_material.m_phong_material.ks, 0.f, 1.f);
+                    DrawVecControl("Kd", submesh.m_sub_material.m_phong_material.kd, false, 0.f, 1.f, 0.05);
+                    DrawVecControl("Ks", submesh.m_sub_material.m_phong_material.ks, false, 0.f, 1.f, 0.05);
 
                     ImGui::Columns(2);
                     ImGui::SetColumnWidth(0, 100.f);
@@ -490,8 +528,11 @@ void showEditorDetailWindow(bool* p_open)
                     ImGui::SetNextItemWidth(296.f);
                     ImGui::DragFloat("##Shininess", &submesh.m_sub_material.m_phong_material.shininess, 1.f, 10.f, 300.f, "%.3f");
 
+                    ImGui::Columns(1);
+
                     ImGui::TreePop();
                 }
+                ++submesh_count;
             }
             ImGui::TreePop();
         }
@@ -649,7 +690,6 @@ int main(int argc, char** argv)
 
      // Our state
     bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // display texture

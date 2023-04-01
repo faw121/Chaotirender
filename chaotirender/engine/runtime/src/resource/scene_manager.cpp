@@ -35,9 +35,26 @@ namespace Chaotirender
         m_object_instance_list.push_back(RenderObjectInstance());
         
         m_object_instance_list.back().m_name = name;
+        m_object_instance_list.back().m_res_ind = ind;
 
         g_engine_global_context.m_asset_manager->createObjectInstance(ind, m_object_instance_list.back());
         
         res.m_instance_count++;
+    }
+
+    void SceneManager::removeObjectInstance(int ind)
+    {
+        if (ind == -1)
+            return;
+        if (ind >= m_object_instance_list.size())
+        {
+            std::cout << "--object resource index out of range\n";
+            return;
+        }
+        
+        m_selected_obj_ins_ind = -1;
+        int res_ind = m_object_instance_list[ind].m_res_ind;
+        m_object_instance_list.erase(m_object_instance_list.begin() + ind);
+        g_engine_global_context.m_asset_manager->m_object_resource_list[res_ind].m_instance_count--;
     }
 }

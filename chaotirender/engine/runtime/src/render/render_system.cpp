@@ -62,6 +62,16 @@ namespace Chaotirender
                 // model matrix
                 // TODO: rotate
                 glm::mat4x4 model_mat(1.f);
+
+
+                glm::vec3 rot_angle = glm::radians(obj.m_transform.rotation);
+                auto qx = glm::angleAxis(rot_angle.x, glm::vec3(1.f, 0.f, 0.f));
+                auto qy = glm::angleAxis(rot_angle.y, glm::vec3(0.f, 1.f, 0.f));
+                auto qz = glm::angleAxis(rot_angle.z, glm::vec3(0.f, 0.f, 1.f));
+
+                obj.m_transform.rotation_q = qz * qx * qy;   
+                
+                model_mat = glm::mat4_cast(obj.m_transform.rotation_q);
                 model_mat = glm::scale(model_mat, obj.m_transform.scale);
                 model_mat = glm::translate(model_mat, obj.m_transform.translation);
 
