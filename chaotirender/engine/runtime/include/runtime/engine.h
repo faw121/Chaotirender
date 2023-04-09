@@ -17,6 +17,8 @@ namespace Chaotirender
         void init();
 
         void run();
+
+        void tickOneFrame();
         
     public:
         std::shared_ptr<RenderSystem> m_render_system;

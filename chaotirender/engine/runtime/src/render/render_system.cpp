@@ -26,6 +26,15 @@ namespace Chaotirender
         m_render_scene.init();
     }
 
+    void RenderSystem::setViewPort(int w, int h)
+    {   
+        m_w = w;
+        m_h = h;
+        g_render_pipeline.setViewPort(w, h);
+    }
+
+    std::array<int, 2> RenderSystem::getViewPortSize() const { return std::array<int, 2>({m_w, m_h}); }
+
     void RenderSystem::swapRenderData()
     {   
         m_render_scene.m_render_mesh_list.clear();
@@ -165,7 +174,7 @@ namespace Chaotirender
             if (mesh.m_use_tex)
             {   
                 phong_pixel_shader->m_use_diffuse_texture = true;
-                g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", SampleType::BILINEAR);
+                g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", m_sample_type);
             }
 
             // g_render_pipeline.bindPixelShaderTexture(mesh.m_material_tex_id.m_base_color_tex_id, "diffuse_texture", SampleType::BILINEAR);

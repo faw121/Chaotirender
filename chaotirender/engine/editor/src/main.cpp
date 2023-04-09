@@ -25,12 +25,15 @@
 // 5. ** remove object 
 // 5. ** rotation: quauternion record overall rotation
 // 6. point light is difficult
+// 7. ** scroll and key board focus
 
 
 float m_mouse_x = 0;
 float m_mouse_y = 0;
 // Chaotirender::Camera camera;
 // Chaotirender::Camera old_camera;
+float width = 1280.f;
+float height = 720.f;
 
 std::shared_ptr<Chaotirender::SimpleVertexShader> simple_vertex_shader {nullptr};
 std::shared_ptr<Chaotirender::TexturePixelShader> texture_pixel_shader {nullptr};
@@ -129,6 +132,8 @@ void showEditorMenu()
     static bool draw_line = false;
     static bool back_face_culling = true;
     static bool early_z = false;
+    static bool nearest_sample = false;
+    static bool bilinear_sample = true;
 
     if (ImGui::BeginMainMenuBar())
     {   
@@ -155,6 +160,24 @@ void showEditorMenu()
                     draw_triangle = !draw_triangle;
                     draw_line = !draw_line;
                     Chaotirender::g_engine_global_context.m_render_system->m_render_config.rasterize_config.primitive = Chaotirender::PrimitiveType::line;
+                } 
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("texture sample type"))
+            {   
+                if (ImGui::MenuItem("nearest", NULL, nearest_sample))
+                {   
+                    nearest_sample = !nearest_sample;
+                    bilinear_sample = !bilinear_sample;
+                    Chaotirender::g_engine_global_context.m_render_system->m_sample_type = Chaotirender::SampleType::NEAREST;
+                }
+
+                if (ImGui::MenuItem("bi-linear", NULL, bilinear_sample))
+                {   
+                    bilinear_sample = !bilinear_sample;
+                    nearest_sample = !nearest_sample;
+                    Chaotirender::g_engine_global_context.m_render_system->m_sample_type = Chaotirender::SampleType::BILINEAR;
                 } 
                 ImGui::EndMenu();
             }
@@ -228,6 +251,20 @@ void showEditorRenderScene(bool* p_open, int scene_tex_id, int w, int h, const u
         ImGui::End();
         return;
     }
+
+    ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+    ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+    width = vMax.x - vMin.x;
+    height = vMax.y - vMin.y - 25.f;
+    // vMin.x += ImGui::GetWindowPos().x;
+    // vMin.y += ImGui::GetWindowPos().y;
+    // vMax.x += ImGui::GetWindowPos().x;
+    // vMax.y += ImGui::GetWindowPos().y;
+
+    // vMax.x = vMin.x + width;
+    // vMax.y = vMin.y + height;
+
+    // ImGui::GetForegroundDrawList()->AddRect( vMin, vMax, IM_COL32( 255, 255, 0, 255 ) );
 
     glBindTexture(GL_TEXTURE_2D, scene_tex_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, scene_data);
@@ -726,6 +763,9 @@ int main(int argc, char** argv)
         glfwPollEvents();
 
         processEditorCommand();
+
+        Chaotirender::g_render_pipeline.setViewPort(static_cast<int>(width), static_cast<int>(height));
+        camera.setAspect(width / height);
         
         engine.m_render_system->swapRenderData();
 
