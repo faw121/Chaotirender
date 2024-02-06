@@ -1,5 +1,7 @@
 #include <runtime/render/camera.h>
 
+#include <runtime/debug.h>
+
 namespace Chaotirender
 {
     void Camera::move(glm::vec3 delta) { m_position += delta; }

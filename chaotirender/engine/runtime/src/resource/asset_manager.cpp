@@ -2,6 +2,7 @@
 #include <runtime/util/json.h>
 #include <runtime/pipeline/render_pipeline.h>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <filesystem>

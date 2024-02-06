@@ -272,6 +272,8 @@ void showEditorRenderScene(bool* p_open, int scene_tex_id, int w, int h, const u
     ImGui::Image((void*)(intptr_t)scene_tex_id, ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    // float s = glm::tan(Chaotirender::g_engine_global_context.m_render_system->m_camera.getFov());
+    // ImGui::Text("scale: %.2f", 1.f / s);
     ImGui::End();
 }
 
@@ -553,8 +555,8 @@ void showEditorDetailWindow(bool* p_open)
 
                     // phong parameter
                     // DrawVecControl("Ka", submesh.m_sub_material.m_phong_material.ka);
-                    DrawVecControl("Kd", submesh.m_sub_material.m_phong_material.kd, false, 0.f, 1.f, 0.05);
-                    DrawVecControl("Ks", submesh.m_sub_material.m_phong_material.ks, false, 0.f, 1.f, 0.05);
+                    DrawVecControl("Kd", submesh.m_sub_material.m_phong_material.kd, false, 0.f, 1.f, 0.05, 0.7f);
+                    DrawVecControl("Ks", submesh.m_sub_material.m_phong_material.ks, false, 0.f, 1.f, 0.05, 0.3f);
 
                     ImGui::Columns(2);
                     ImGui::SetColumnWidth(0, 100.f);

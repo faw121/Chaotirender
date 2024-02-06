@@ -4,17 +4,18 @@ file(GLOB_RECURSE srcs CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(${TARGET_NAME} ${srcs})
 
+# $<CONFIG>
 add_custom_target(remove_asset
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/asset VERBATIM)
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset VERBATIM)
 add_custom_target(copy_asset
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/asset DEPENDS remove_asset VERBATIM)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/asset DEPENDS remove_asset VERBATIM)
 
 add_dependencies(${TARGET_NAME} copy_asset)
 
 add_custom_target(remove_resource
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/resource VERBATIM)
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CHAOTIRENDER_BINARY_ROOT_DIR}/resource VERBATIM)
 add_custom_target(copy_resource
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/$<CONFIG>/resource DEPENDS remove_resource VERBATIM)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CHAOTIRENDER_BINARY_ROOT_DIR}/resource DEPENDS remove_resource VERBATIM)
 
 add_dependencies(${TARGET_NAME} copy_resource)
 
