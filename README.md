@@ -17,11 +17,11 @@ Chaotirender is a tiny render engine written in C++(yet too simple to be an engi
 - Apply transformation to objects
 
 ## Sceenshots
-<img src='img/rendering.png' width=400>
-<img src='img/wireframe.png' width=400>
-<img src='img/move_light.gif' width=400>
-<img src='img/transformation.gif' width=400>
-<img src='img/material.gif' width=400>
+<img src='img/rendering.png'>
+<img src='img/wireframe.png'>
+<img src='img/move_light.gif'>
+<img src='img/transformation.gif'>
+<img src='img/material.gif'>
 
 ## 3rd Party Dependencies
 The project uses these 3rd party dependencies:
